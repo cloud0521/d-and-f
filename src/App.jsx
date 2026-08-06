@@ -1065,7 +1065,7 @@ export default function App() {
         </section>
 
         {/* SECTION 4: RSVP */}
-        <section className="min-h-[100svh] w-full snap-start snap-always flex flex-col items-center justify-start px-6 pb-8 pt-4 md:h-[100svh] md:justify-center md:overflow-y-auto md:px-20 md:py-16 max-w-xl mx-auto no-scrollbar">
+        <section className="min-h-[100svh] w-full snap-start snap-always flex flex-col items-center justify-start px-6 pb-8 pt-4 md:h-auto md:min-h-[100svh] md:justify-start md:overflow-visible md:px-20 md:pb-24 md:pt-24 max-w-xl mx-auto no-scrollbar">
           <div className="w-full">
             <motion.div 
               initial="hidden"
