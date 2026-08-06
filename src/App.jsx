@@ -2,7 +2,7 @@ import { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Calendar, MapPin, Clock, Shirt, Gift, CheckCircle2, ChevronLeft, ChevronRight, Send, Loader2, Eye, EyeOff } from 'lucide-react';
 
-import logoWebp from './logo.webp';
+import logoWebp from './logo-full.webp';
 import bibleWebp from './assets/bible.webp';
 import chapterOneBackground from './assets/gallery/gallery-05-720.webp';
 import landingBackground from './assets/gallery/gallery-13-1200.webp';
@@ -96,6 +96,7 @@ export default function App() {
   const [dashboardRows, setDashboardRows] = useState([]);
   const [loadedImageCount, setLoadedImageCount] = useState(0);
   const [loadedImageSources, setLoadedImageSources] = useState(() => new Set());
+  const [isLogoExpanded, setIsLogoExpanded] = useState(false);
   
   // RSVP Form States
   const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
@@ -106,6 +107,7 @@ export default function App() {
   const audioRef = useRef(null);
   const containerRef = useRef(null);
   const openingStartedRef = useRef(false);
+  const logoPreviewTimerRef = useRef(null);
   const shouldReduceMotion = useReducedMotion();
   const isMessengerInAppBrowser = useMemo(() => (
     typeof navigator !== 'undefined' && /FBAN|FBAV|Messenger/i.test(navigator.userAgent)
@@ -136,6 +138,10 @@ export default function App() {
     const intervalId = window.setInterval(updateCountdown, 1000);
     return () => window.clearInterval(intervalId);
   }, [identity.weddingDate]);
+
+  useEffect(() => () => {
+    if (logoPreviewTimerRef.current) window.clearTimeout(logoPreviewTimerRef.current);
+  }, []);
 
   const countdown = useMemo(() => {
     const totalSeconds = Math.floor(timeRemaining / 1000);
@@ -265,6 +271,15 @@ export default function App() {
         targetChild.scrollIntoView({ behavior: 'smooth' });
       }
     }
+  };
+
+  const showLogoPreview = () => {
+    if (logoPreviewTimerRef.current) window.clearTimeout(logoPreviewTimerRef.current);
+    setIsLogoExpanded(true);
+    logoPreviewTimerRef.current = window.setTimeout(() => {
+      setIsLogoExpanded(false);
+      logoPreviewTimerRef.current = null;
+    }, 3000);
   };
 
   const bringRsvpFieldIntoView = (event) => {
@@ -414,6 +429,31 @@ export default function App() {
       
       <audio ref={audioRef} loop src="/bg-music.mp3" preload="auto" />
 
+      <AnimatePresence>
+        {isLogoExpanded && (
+          <motion.div
+            className="fixed inset-0 z-[90] flex items-center justify-center bg-[#16070B]/72 p-6 backdrop-blur-md"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0.1 : 0.45 }}
+            aria-live="polite"
+          >
+            <motion.img
+              src={logoWebp}
+              width="2000"
+              height="2000"
+              alt={identity.monogramAlt}
+              className="h-auto w-[min(82vw,34rem)] object-contain drop-shadow-[0_0_35px_rgba(196,140,120,0.5)]"
+              initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.28 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.28 }}
+              transition={{ duration: shouldReduceMotion ? 0.1 : 0.65, ease: [0.16, 1, 0.3, 1] }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.035] bg-[radial-gradient(#C48C78_1px,transparent_1px)] [background-size:24px_24px]" />
       <motion.div 
         animate={{ opacity: [0.08, 0.15, 0.08], scale: [1, 1.05, 1] }}
@@ -464,13 +504,18 @@ export default function App() {
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-col items-center max-w-lg z-10"
             >
-              <motion.div 
+              <motion.button
+                type="button"
+                onClick={showLogoPreview}
+                aria-label="Enlarge wedding logo for three seconds"
                 animate={{ y: [0, -4, 0] }}
+                whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="w-36 h-36 md:w-44 md:h-44 mb-6 relative flex items-center justify-center"
+                className="w-36 h-36 md:w-44 md:h-44 mb-6 relative flex items-center justify-center cursor-zoom-in rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#C48C78]"
               >
-              <img src={logoWebp} width="2000" height="2000" alt={identity.monogramAlt} fetchPriority="high" className="h-full w-full object-contain filter drop-shadow-[0_0_20px_rgba(196,140,120,0.6)]" />
-              </motion.div>
+                <img src={logoWebp} width="2000" height="2000" alt={identity.monogramAlt} fetchPriority="high" className="h-full w-full object-contain filter drop-shadow-[0_0_20px_rgba(196,140,120,0.6)]" />
+              </motion.button>
 
               <p className="font-sans text-[10px] tracking-[0.4em] text-[#C48C78] uppercase mb-1">You Are Cordially Invited</p>
               <h1 className="font-serif text-3xl md:text-4xl text-[#F3E5E8] font-light mb-8">{identity.coupleNames}</h1>
@@ -755,14 +800,19 @@ export default function App() {
             variants={magicalHeroVariant}
             className="max-w-4xl mx-auto pt-8 relative z-10 flex flex-col items-center"
           >
-            <motion.div 
+            <motion.button
+              type="button"
+              onClick={showLogoPreview}
+              aria-label="Enlarge wedding logo for three seconds"
               initial={{ scale: 0, rotate: -20, opacity: 0 }}
               animate={{ scale: 1, rotate: 0, opacity: 1 }}
+              whileHover={shouldReduceMotion ? undefined : { scale: 1.06 }}
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
               transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="w-24 h-24 md:w-28 md:h-28 mb-5 relative flex items-center justify-center filter drop-shadow-[0_0_25px_rgba(217,198,165,0.55)]"
+              className="w-32 h-32 md:w-40 md:h-40 mb-3 relative flex items-center justify-center cursor-zoom-in rounded-full filter drop-shadow-[0_0_25px_rgba(217,198,165,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D9C6A5]"
             >
               <img src={logoWebp} width="2000" height="2000" alt={identity.monogramAlt} className="h-full w-full object-contain" />
-            </motion.div>
+            </motion.button>
 
             <motion.div 
               initial={{ opacity: 0, y: 15 }}

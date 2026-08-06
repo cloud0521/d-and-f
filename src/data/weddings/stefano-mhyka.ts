@@ -91,6 +91,6 @@ export const stefanoMhykaWedding: WeddingExperience = {
     { id: 'arrival', question: 'When should I arrive?', answer: 'Please arrive by 2:30 PM. The ceremony will begin promptly at 3:00 PM.' },
     { id: 'children', question: 'May we bring children?', answer: 'We adore your little ones, but our celebration will be adults-only except for children included in the entourage.' },
     { id: 'transport', question: 'Will transportation be available?', answer: 'A shuttle will leave the reception venue for the church at 2:00 PM and return after the ceremony. Seats must be reserved with your RSVP.' },
-    { id: 'photos', question: 'May we take photos?', answer: 'We invite you to be fully present during our unplugged ceremony. Photos are warmly welcomed at the reception.' },
+    { id: 'photos', question: 'May we take photos?', answer: 'Yes, you are welcome to take photos. We kindly ask that you remain mindful of our official photographer, avoid blocking their view, and allow them to capture the important moments.' },
   ],
 };
