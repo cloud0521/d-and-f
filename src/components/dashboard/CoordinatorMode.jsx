@@ -2,15 +2,15 @@ import { useState } from 'react';
 import { CheckCircle2, Clock3, MapPin, Phone, Users, X } from 'lucide-react';
 
 const timeline = [
-  { time: '8:00 AM', title: 'Supplier arrival', detail: 'Venue styling and sound check', status: 'complete' },
-  { time: '8:30 AM', title: 'Guest welcome', detail: 'Registration table opens', status: 'current' },
-  { time: '9:00 AM', title: 'Ceremony begins', detail: 'Our Lady of Salvation Parish', status: 'next' },
-  { time: '11:00 AM', title: 'Reception', detail: 'Immediately following the ceremony', status: 'upcoming' },
+  { time: '12:30 PM', title: 'Supplier arrival', detail: 'Final styling and sound check', status: 'complete' },
+  { time: '2:00 PM', title: 'Guest shuttle', detail: 'Departure from Alta Veranda de Tibig', status: 'current' },
+  { time: '3:00 PM', title: 'Ceremony begins', detail: 'San Antonio de Padua Parish', status: 'next' },
+  { time: '5:30 PM', title: 'Cocktails and reception', detail: 'Alta Veranda de Tibig', status: 'upcoming' },
 ];
 
 const contacts = [
   { name: 'Lead Coordinator', role: 'Event lead', phone: '+63 900 000 0000' },
-  { name: 'Venue Contact', role: 'Parish liaison', phone: '+63 900 000 0000' },
+  { name: 'Venue Contact', role: 'Silang venue liaison', phone: '+63 900 000 0000' },
 ];
 
 export default function CoordinatorMode({ onClose }) {
@@ -23,7 +23,7 @@ export default function CoordinatorMode({ onClose }) {
           <div>
             <p className="font-sans text-[10px] uppercase tracking-[0.34em] text-[#C48C78]">Event-day workspace</p>
             <h1 id="coordinator-title" className="m-0 mt-2 font-serif text-3xl font-light text-[#F3E5E8] md:text-5xl">Coordinator Mode</h1>
-            <p className="mt-2 font-serif text-sm italic text-[#D4B8BC]">Cloyd &amp; Cyrin · Saturday, December 19, 2026</p>
+            <p className="mt-2 font-serif text-sm italic text-[#D4B8BC]">Stefano &amp; Mhyka · May 22, 2027</p>
           </div>
           <button type="button" onClick={onClose} className="rounded-full border border-[#C48C78]/35 bg-[#451822]/70 p-2 text-[#F3E5E8] transition-colors hover:border-[#C48C78]" aria-label="Close Coordinator Mode"><X className="h-5 w-5" /></button>
         </header>
@@ -34,7 +34,7 @@ export default function CoordinatorMode({ onClose }) {
               { label: 'Expected guests', value: '156', icon: Users },
               { label: 'RSVP accepted', value: '124', icon: CheckCircle2 },
               { label: 'Checked in', value: '0', icon: Users },
-              { label: 'Next milestone', value: '9:00', icon: Clock3 },
+              { label: 'Next milestone', value: '3:00', icon: Clock3 },
             ].map(({ label, value, icon: Icon }) => (
               <article key={label} className="rounded-2xl border border-[#C48C78]/25 bg-[#451822]/55 p-4 shadow-lg">
                 <Icon className="mb-5 h-5 w-5 text-[#C48C78]" />
@@ -69,7 +69,7 @@ export default function CoordinatorMode({ onClose }) {
               <article className="rounded-3xl border border-[#C48C78]/25 bg-[#451822]/55 p-5">
                 <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-[#C48C78]">Current focus</p>
                 <h2 className="mt-2 font-serif text-2xl font-light text-[#F3E5E8]">Guest welcome</h2>
-                <p className="mt-2 text-sm leading-relaxed text-[#D4B8BC]">Confirm the registration table, seating guide, and parish handoff are ready before the ceremony begins.</p>
+                <p className="mt-2 text-sm leading-relaxed text-[#D4B8BC]">Confirm the shuttle manifest, seating guide, and church handoff are ready before guests depart.</p>
                 <button type="button" aria-pressed={currentTaskReady} onClick={() => setCurrentTaskReady((ready) => !ready)} className={`mt-5 w-full rounded-full border px-4 py-3 font-sans text-[10px] uppercase tracking-[0.22em] transition-colors ${currentTaskReady ? 'border-[#C48C78] bg-[#C48C78] text-[#36121A]' : 'border-[#C48C78]/50 text-[#F3E5E8] hover:bg-[#C48C78] hover:text-[#36121A]'}`}>{currentTaskReady ? 'Ready for ceremony' : 'Mark ready'}</button>
               </article>
               <article className="rounded-3xl border border-[#C48C78]/25 bg-[#451822]/55 p-5">
@@ -83,7 +83,7 @@ export default function CoordinatorMode({ onClose }) {
                   ))}
                 </ul>
               </article>
-              <a href="https://www.google.com/maps/search/?api=1&query=Our+Lady+of+Salvation+Parish+Purok+6+Brgy+Cabacungan+La+Castellana+Negros+Occidental" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-3xl border border-[#C48C78]/25 bg-[#451822]/55 p-5 text-[#F3E5E8] transition-colors hover:border-[#C48C78]"><MapPin className="h-5 w-5 text-[#C48C78]" /><span className="font-sans text-[10px] uppercase tracking-[0.18em]">Open venue map</span></a>
+              <a href="https://www.google.com/maps/search/?api=1&query=San%20Antonio%20de%20Padua%20Parish%20Pooc%20Silang%20Cavite" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-3xl border border-[#C48C78]/25 bg-[#451822]/55 p-5 text-[#F3E5E8] transition-colors hover:border-[#C48C78]"><MapPin className="h-5 w-5 text-[#C48C78]" /><span className="font-sans text-[10px] uppercase tracking-[0.18em]">Open ceremony map</span></a>
             </div>
           </section>
         </main>

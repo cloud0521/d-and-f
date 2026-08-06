@@ -1,20 +1,17 @@
 import { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Shirt, Gift, CheckCircle2, ChevronLeft, ChevronRight, Send, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, Shirt, Gift, CheckCircle2, ChevronLeft, ChevronRight, Send, Loader2, Eye, EyeOff } from 'lucide-react';
 
 import logoWebp from './logo.webp';
 import bibleWebp from './assets/bible.webp';
-import p1Small from './assets/p1-720.webp';
-import p1Large from './assets/p1-1200.webp';
-import p2Small from './assets/p2-720.webp';
-import p2Large from './assets/p2-1200.webp';
-import p3Small from './assets/p3-720.webp';
-import p3Large from './assets/p3-1200.webp';
-import churchVenue from './assets/our-lady-of-salvation-parish.jpg';
-import receptionVenueWebp from './assets/fc-reception-720.webp';
+import chapterOneBackground from './assets/gallery/gallery-05-720.webp';
+import landingBackground from './assets/gallery/gallery-13-1200.webp';
+import churchVenueBackground from './assets/church-venue.webp';
+import receptionVenueBackground from './assets/reception-venue.webp';
 import CoordinatorMode from './components/dashboard/CoordinatorMode';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import { useWeddingExperience } from './contexts/WeddingExperienceContext';
+import { stefanoMhykaGallery as galleryPhotos } from './data/gallery';
 
 const RSVPDashboard = lazy(() => import('./components/dashboard/RSVPDashboard'));
 
@@ -28,26 +25,25 @@ const chapters = [
 
 const timelineEvents = [
   {
-    year: "Chapter 2.1",
-    title: "High School Days",
-    description: "We crossed paths as schoolmates and officially became a couple, marking the sweet beginning of our journey."
+    year: "2019",
+    title: "The Accidental Table",
+    description: "A crowded birthday dinner left one empty chair beside Mhyka. Stefano took it, and neither noticed how quickly the evening disappeared."
   },
   {
-    year: "Chapter 2.2",
-    title: "The Separation",
-    description: "Not even a full month had passed before life parted our ways, leading to seven long years of walking separate paths."
+    year: "2020",
+    title: "Love, From a Distance",
+    description: "Midnight calls, handwritten notes, and Sunday breakfasts over video taught them that closeness was something they could choose."
   },
   {
-    year: "Chapter 2.3",
-    title: "Destiny's Return",
-    description: "Seven years later, destiny brought us back together, proving that what is truly meant to be will always find its way home."
+    year: "2023",
+    title: "A Life in the Little Things",
+    description: "Road trips, rescued plants, and ordinary Tuesdays became proof that home was never a place—it was each other."
+  },
+  {
+    year: "2026",
+    title: "The Yes by the Sea",
+    description: "At sunset, on the shore of their first trip together, Stefano asked Mhyka to choose him for every chapter still to come."
   }
-];
-
-const galleryPhotos = [
-  { img: p1Small, webpSrcSet: `${p1Small} 720w, ${p1Large} 1200w`, preloadSrc: p1Large, caption: "A Playful Moment" },
-  { img: p2Small, webpSrcSet: `${p2Small} 720w, ${p2Large} 1200w`, preloadSrc: p2Large, caption: "Exploring Together" },
-  { img: p3Small, webpSrcSet: `${p3Small} 720w, ${p3Large} 1200w`, preloadSrc: p3Large, caption: "By the Sea" }
 ];
 
 const criticalExperienceImages = [logoWebp, bibleWebp];
@@ -75,9 +71,9 @@ const magicalHeroVariant = {
 };
 
 const carouselSlideVariants = {
-  enter: (direction) => ({ x: `${direction * 35}%`, opacity: 0.7, scale: 1.012 }),
+  enter: (direction) => ({ x: `${direction * 3}%`, opacity: 0, scale: 1.02 }),
   center: { x: '0%', opacity: 1, scale: 1 },
-  exit: (direction) => ({ x: `${direction * -25}%`, opacity: 0.42, scale: 0.99 }),
+  exit: (direction) => ({ x: `${direction * -3}%`, opacity: 0, scale: 0.98 }),
 };
 
 export default function App() {
@@ -88,13 +84,12 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
   const [showCoordinatorMode, setShowCoordinatorMode] = useState(() => new URLSearchParams(window.location.search).get('mode') === 'coordinator');
-  const [galleryMode, setGalleryMode] = useState('stack');
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
-  const [galleryIdleTick, setGalleryIdleTick] = useState(0);
   const [galleryDirection, setGalleryDirection] = useState(1);
-  const [galleryScrollLocked, setGalleryScrollLocked] = useState(false);
+  const [isGalleryPaused, setIsGalleryPaused] = useState(false);
   const [isAdminPasswordOpen, setIsAdminPasswordOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
+  const [isAdminPasswordVisible, setIsAdminPasswordVisible] = useState(false);
   const [adminPasswordError, setAdminPasswordError] = useState('');
   const [isValidatingAdmin, setIsValidatingAdmin] = useState(false);
   const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false);
@@ -111,8 +106,6 @@ export default function App() {
   const audioRef = useRef(null);
   const containerRef = useRef(null);
   const openingStartedRef = useRef(false);
-  const galleryTriggerRef = useRef(null);
-  const restoreGalleryFocusRef = useRef(false);
   const shouldReduceMotion = useReducedMotion();
   const isMessengerInAppBrowser = useMemo(() => (
     typeof navigator !== 'undefined' && /FBAN|FBAV|Messenger/i.test(navigator.userAgent)
@@ -155,65 +148,28 @@ export default function App() {
   }, [timeRemaining]);
 
   useEffect(() => {
-    if (galleryMode !== 'stack' || shouldReduceMotion) return undefined;
-
-    const intervalId = window.setInterval(() => {
-      setActiveGalleryIndex((currentIndex) => (currentIndex + 1) % galleryPhotos.length);
-    }, 6500);
-
-    return () => window.clearInterval(intervalId);
-  }, [galleryMode, shouldReduceMotion]);
-
-  useEffect(() => {
-    if (galleryMode !== 'carousel') return undefined;
-
-    const timeoutId = window.setTimeout(() => closeGalleryCarousel(), 12000);
-    return () => window.clearTimeout(timeoutId);
-  }, [galleryMode, galleryIdleTick]);
-
-  useEffect(() => {
-    if (galleryMode !== 'carousel') return undefined;
-
     [activeGalleryIndex, (activeGalleryIndex - 1 + galleryPhotos.length) % galleryPhotos.length, (activeGalleryIndex + 1) % galleryPhotos.length].forEach((index) => {
       const image = new Image();
       image.src = galleryPhotos[index].preloadSrc;
     });
-  }, [activeGalleryIndex, galleryMode]);
+  }, [activeGalleryIndex]);
+
+  useEffect(() => {
+    if (activeSection !== 2 || shouldReduceMotion || isGalleryPaused) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setGalleryDirection(1);
+      setActiveGalleryIndex((currentIndex) => (currentIndex + 1) % galleryPhotos.length);
+    }, 4500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [activeGalleryIndex, activeSection, isGalleryPaused, shouldReduceMotion]);
 
   useEffect(() => {
     if (activeSection < 1) return;
     const image = new Image();
     image.src = galleryPhotos[0].preloadSrc;
   }, [activeSection]);
-
-  useEffect(() => {
-    if (!galleryScrollLocked) return undefined;
-
-    const previousBodyOverflow = document.body.style.overflow;
-    const scrollContainer = containerRef.current;
-    const previousContainerOverflow = scrollContainer?.style.overflowY;
-    document.body.style.overflow = 'hidden';
-    if (scrollContainer) scrollContainer.style.overflowY = 'hidden';
-
-    const handleGalleryKeydown = (event) => {
-      if (event.key === 'Escape') closeGalleryCarousel();
-      if (event.key === 'ArrowLeft') moveGallery(-1);
-      if (event.key === 'ArrowRight') moveGallery(1);
-    };
-    window.addEventListener('keydown', handleGalleryKeydown);
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      if (scrollContainer) scrollContainer.style.overflowY = previousContainerOverflow ?? '';
-      window.removeEventListener('keydown', handleGalleryKeydown);
-    };
-  }, [galleryScrollLocked, activeGalleryIndex]);
-
-  useEffect(() => {
-    if (galleryMode === 'carousel' && activeSection !== 2) {
-      closeGalleryCarousel({ restoreFocus: false });
-    }
-  }, [activeSection, galleryMode]);
 
   useEffect(() => {
     if (phase !== 'bible') return undefined;
@@ -311,29 +267,30 @@ export default function App() {
     }
   };
 
+  const bringRsvpFieldIntoView = (event) => {
+    if (!window.matchMedia('(max-width: 767px)').matches) return;
+
+    const field = event.currentTarget;
+    const scrollContainer = containerRef.current;
+    if (!scrollContainer) return;
+
+    // Give the mobile keyboard time to open, then place the active field
+    // near the upper third of the visible invitation.
+    window.setTimeout(() => {
+      const containerTop = scrollContainer.getBoundingClientRect().top;
+      const fieldTop = field.getBoundingClientRect().top;
+
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollTop + fieldTop - containerTop - 88,
+        behavior: shouldReduceMotion ? 'auto' : 'smooth',
+      });
+    }, 280);
+  };
+
   const moveGallery = (direction) => {
-    setGalleryIdleTick((tick) => tick + 1);
     setGalleryDirection(direction);
     setActiveGalleryIndex((currentIndex) => (currentIndex + direction + galleryPhotos.length) % galleryPhotos.length);
   };
-
-  const openGalleryCarousel = () => {
-    setGalleryIdleTick((tick) => tick + 1);
-    setGalleryScrollLocked(true);
-    setGalleryMode('carousel');
-  };
-
-  const closeGalleryCarousel = ({ restoreFocus = true } = {}) => {
-    restoreGalleryFocusRef.current = restoreFocus;
-    setGalleryMode('stack');
-  };
-
-  const stackedGalleryPhotos = galleryPhotos
-    .map((photo, index) => ({
-      ...photo,
-      stackPosition: (index - activeGalleryIndex + galleryPhotos.length) % galleryPhotos.length,
-    }))
-    .sort((first, second) => second.stackPosition - first.stackPosition);
   const activeGalleryPhoto = galleryPhotos[activeGalleryIndex];
   const isActiveGalleryPhotoLoaded = loadedImageSources.has(activeGalleryPhoto.preloadSrc);
 
@@ -403,6 +360,7 @@ export default function App() {
 
       setDashboardRows(data ?? []);
       setAdminPassword('');
+      setIsAdminPasswordVisible(false);
       setIsAdminPasswordOpen(false);
       setIsAdminDashboardOpen(true);
     } catch (error) {
@@ -425,9 +383,30 @@ export default function App() {
             <motion.form role="dialog" aria-modal="true" aria-labelledby="admin-access-title" initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }} onSubmit={handleAdminPasswordSubmit} className="w-full max-w-sm rounded-3xl border border-[#C8A96A]/45 bg-[#451822] p-7 shadow-2xl">
               <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-[#C8A96A]">Recognizing invitation...</p>
               <h2 id="admin-access-title" className="mt-3 font-serif text-3xl font-light text-[#F3E5E8]">Admin access</h2>
-              <label htmlFor="admin-password" className="mt-6 block font-sans text-[10px] uppercase tracking-[0.2em] text-[#D4B8BC]">Password</label><input id="admin-password" autoFocus required autoComplete="current-password" type="password" value={adminPassword} onChange={(event) => setAdminPassword(event.target.value)} className="mt-2 w-full rounded-xl border border-[#C8A96A]/35 bg-[#2A0D14] px-4 py-3 font-serif text-lg text-[#F3E5E8] outline-none" />
+              <label htmlFor="admin-password" className="mt-6 block font-sans text-[10px] uppercase tracking-[0.2em] text-[#D4B8BC]">Password</label>
+              <div className="relative mt-2">
+                <input
+                  id="admin-password"
+                  autoFocus
+                  required
+                  autoComplete="current-password"
+                  type={isAdminPasswordVisible ? 'text' : 'password'}
+                  value={adminPassword}
+                  onChange={(event) => setAdminPassword(event.target.value)}
+                  className="w-full rounded-xl border border-[#C8A96A]/35 bg-[#2A0D14] py-3 pl-4 pr-12 font-serif text-lg text-[#F3E5E8] outline-none focus:border-[#C8A96A]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsAdminPasswordVisible((isVisible) => !isVisible)}
+                  className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-xl text-[#D4B8BC] transition-colors hover:text-[#C8A96A] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#C8A96A]"
+                  aria-label={isAdminPasswordVisible ? 'Hide administrator password' : 'Show administrator password'}
+                  aria-pressed={isAdminPasswordVisible}
+                >
+                  {isAdminPasswordVisible ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}
+                </button>
+              </div>
               {adminPasswordError && <p className="mt-3 text-sm text-[#F3B5AD]">{adminPasswordError}</p>}
-              <div className="mt-6 flex gap-3"><button type="button" onClick={() => setIsAdminPasswordOpen(false)} className="flex-1 rounded-full border border-[#C8A96A]/35 px-4 py-3 font-sans text-[10px] uppercase tracking-[0.2em] text-[#F3E5E8]">Cancel</button><button type="submit" disabled={isValidatingAdmin} className="flex-1 rounded-full bg-[#C8A96A] px-4 py-3 font-sans text-[10px] uppercase tracking-[0.2em] text-[#2A0D14] disabled:opacity-60">{isValidatingAdmin ? 'Checking...' : 'Continue'}</button></div>
+              <div className="mt-6 flex gap-3"><button type="button" onClick={() => { setIsAdminPasswordVisible(false); setIsAdminPasswordOpen(false); }} className="flex-1 rounded-full border border-[#C8A96A]/35 px-4 py-3 font-sans text-[10px] uppercase tracking-[0.2em] text-[#F3E5E8]">Cancel</button><button type="submit" disabled={isValidatingAdmin} className="flex-1 rounded-full bg-[#C8A96A] px-4 py-3 font-sans text-[10px] uppercase tracking-[0.2em] text-[#2A0D14] disabled:opacity-60">{isValidatingAdmin ? 'Checking...' : 'Continue'}</button></div>
             </motion.form>
           </motion.div>
         )}
@@ -451,6 +430,8 @@ export default function App() {
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-50 bg-[#36121A] flex flex-col items-center justify-center text-center px-6 overflow-hidden"
           >
+            <img src={landingBackground} alt="" aria-hidden="true" fetchPriority="high" className="pointer-events-none absolute inset-0 h-full w-full scale-[1.03] object-cover object-center opacity-70 brightness-[1] saturate-[0.78]" />
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(42,13,20,0.72),rgba(54,18,26,0.48)_48%,rgba(42,13,20,0.82))]" />
             <div className="absolute inset-0 pointer-events-none">
               {[...Array(25)].map((_, i) => (
                 <motion.div
@@ -717,19 +698,28 @@ export default function App() {
         
         {/* SECTION 0: HERO (CHAPTER 1) WITH MAGICAL CURTAIN-REVEAL ANIMATIONS */}
         <section className="h-[100svh] w-full snap-start snap-always flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
+          <img
+            src={chapterOneBackground}
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            className="pointer-events-none absolute inset-0 h-full w-full scale-[1.03] object-cover object-[58%_center] opacity-45 brightness-[1.5] saturate-[0.72] md:object-center"
+          />
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(36,48,38,0.82)_0%,rgba(89,74,62,0.44)_46%,rgba(54,38,42,0.86)_100%)]" />
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(217,198,165,0.18),transparent_48%)]" />
           
           {/* Glowing Magical Aura Burst on Reveal */}
           <motion.div 
             initial={{ scale: 0.4, opacity: 0 }}
             animate={{ scale: [0.6, 1.4, 1], opacity: [0, 0.5, 0.25] }}
             transition={{ duration: 2, ease: "easeOut" }}
-            className="hidden md:block absolute w-[500px] h-[500px] rounded-full bg-gradient-to-r from-[#C48C78]/20 via-[#b08d57]/15 to-transparent blur-3xl pointer-events-none"
+            className="hidden md:block absolute w-[500px] h-[500px] rounded-full bg-gradient-to-r from-[#C27C91]/20 via-[#D9C6A5]/20 to-[#93A387]/10 blur-3xl pointer-events-none"
           />
 
           <motion.div 
             animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            className="hidden md:block absolute w-64 h-64 rounded-full bg-[#C48C78]/10 blur-3xl pointer-events-none"
+            className="hidden md:block absolute w-64 h-64 rounded-full bg-[#D9C6A5]/15 blur-3xl pointer-events-none"
           />
 
           {/* Floating magical sparkles behind Chapter 1 content */}
@@ -737,7 +727,7 @@ export default function App() {
             {[...Array(15)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute rounded-full bg-[#C48C78]"
+                className="absolute rounded-full bg-[#D9C6A5]"
                 style={{
                   width: Math.random() * 3 + 1.5,
                   height: Math.random() * 3 + 1.5,
@@ -769,7 +759,7 @@ export default function App() {
               initial={{ scale: 0, rotate: -20, opacity: 0 }}
               animate={{ scale: 1, rotate: 0, opacity: 1 }}
               transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="w-24 h-24 md:w-28 md:h-28 mb-5 relative flex items-center justify-center filter drop-shadow-[0_0_25px_rgba(196,140,120,0.6)]"
+              className="w-24 h-24 md:w-28 md:h-28 mb-5 relative flex items-center justify-center filter drop-shadow-[0_0_25px_rgba(217,198,165,0.55)]"
             >
               <img src={logoWebp} width="2000" height="2000" alt={identity.monogramAlt} className="h-full w-full object-contain" />
             </motion.div>
@@ -778,9 +768,9 @@ export default function App() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
-              className="inline-block mb-4 px-6 py-1.5 border-y border-[#C48C78]/40 bg-[#36121A]/40 backdrop-blur-sm rounded-lg"
+              className="inline-block mb-4 px-6 py-1.5 border-y border-[#D9C6A5]/45 bg-[#243026]/45 backdrop-blur-sm rounded-lg"
             >
-              <p className="font-sans text-[11px] tracking-[0.45em] text-[#C48C78] uppercase font-medium">
+              <p className="font-sans text-[11px] tracking-[0.45em] text-[#D9C6A5] uppercase font-medium">
                 Together with their families
               </p>
             </motion.div>
@@ -797,7 +787,7 @@ export default function App() {
               <motion.div 
                 animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.1, 1] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                className="font-serif italic text-3xl md:text-5xl text-[#C48C78] font-light"
+                className="font-serif italic text-3xl md:text-5xl text-[#D9C6A5] font-light"
               >
                 &amp;
               </motion.div>
@@ -810,19 +800,19 @@ export default function App() {
               initial={{ scaleX: 0, opacity: 0 }}
               animate={{ scaleX: 1, opacity: 1 }}
               transition={{ duration: 1, delay: 0.7, ease: "easeOut" }}
-              className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#C48C78] to-transparent mx-auto my-5" 
+              className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#D9C6A5] to-transparent mx-auto my-5" 
             />
 
             <motion.p 
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.8, ease: "easeOut" }}
-              className="font-sans text-xs md:text-sm tracking-[0.35em] uppercase text-[#C48C78] font-semibold"
+              className="font-sans text-xs md:text-sm tracking-[0.35em] uppercase text-[#D9C6A5] font-semibold"
             >
               {new Intl.DateTimeFormat('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' }).format(new Date(identity.weddingDate))}
             </motion.p>
             <div className="mt-4 flex items-center justify-center gap-4 font-sans text-[#F3E5E8]" aria-label={`${countdown.days} days, ${countdown.hours} hours, ${countdown.minutes} minutes and ${countdown.seconds} seconds until the wedding`}>
-              {Object.entries(countdown).map(([label, value]) => <div key={label} className="min-w-10 text-center"><span className="block text-base font-medium tabular-nums">{String(value).padStart(2, '0')}</span><span className="text-[8px] uppercase tracking-[0.2em] text-[#C48C78]">{label}</span></div>)}
+              {Object.entries(countdown).map(([label, value]) => <div key={label} className="min-w-10 text-center"><span className="block text-base font-medium tabular-nums">{String(value).padStart(2, '0')}</span><span className="text-[8px] uppercase tracking-[0.2em] text-[#D9C6A5]">{label}</span></div>)}
             </div>
             <motion.p 
               initial={{ opacity: 0, y: 15 }}
@@ -830,13 +820,13 @@ export default function App() {
               transition={{ duration: 1, delay: 0.9, ease: "easeOut" }}
               className="font-serif italic text-sm text-[#D4B8BC] mt-2 font-medium"
             >
-              La Castellana &bull; Negros Occidental
+              Silang &bull; Cavite
             </motion.p>
           </motion.div>
         </section>
 
         {/* SECTION 1: OUR LOVE STORY */}
-        <section className="h-[100svh] w-full snap-start snap-always flex flex-col items-center justify-center px-6 md:px-20 max-w-4xl mx-auto overflow-y-auto no-scrollbar py-16">
+        <section className="min-h-[100svh] w-full snap-start snap-always flex flex-col items-center justify-start px-6 py-12 md:h-[100svh] md:justify-center md:overflow-y-auto md:px-20 md:py-16 max-w-4xl mx-auto no-scrollbar">
           <div className="w-full text-center">
             <motion.div 
               initial="hidden"
@@ -881,7 +871,7 @@ export default function App() {
         </section>
 
         {/* SECTION 2: CAPTURED MOMENTS */}
-        <section className="h-[100svh] w-full snap-start snap-always flex flex-col items-center justify-center px-6 md:px-20 max-w-5xl mx-auto overflow-y-auto no-scrollbar py-16">
+        <section className="w-full snap-start snap-always flex flex-col items-center justify-start px-6 pb-6 pt-12 md:h-[100svh] md:justify-center md:overflow-y-auto md:px-20 md:py-16 max-w-5xl mx-auto no-scrollbar">
           <div className="w-full text-center">
             <motion.div 
               initial="hidden"
@@ -895,132 +885,58 @@ export default function App() {
               <div className="w-12 h-[1px] bg-[#C48C78] mx-auto mt-3" />
             </motion.div>
 
-            <AnimatePresence initial={false}>
-              {galleryMode === 'stack' && (
-                <motion.button
-                  key="gallery-stack"
-                  ref={galleryTriggerRef}
-                  type="button"
-                  onClick={openGalleryCarousel}
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                  className="group relative mx-auto block h-[20rem] w-full max-w-sm cursor-pointer rounded-[1.75rem] text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#C48C78] md:h-[24rem]"
-                  aria-label="Open the wedding photo album"
-                >
-                  {stackedGalleryPhotos.map((photo) => {
-                    const rotation = photo.stackPosition === 1 ? -5 : photo.stackPosition === 2 ? 6 : 0;
-                    const isPhotoLoaded = loadedImageSources.has(photo.preloadSrc);
-                    return (
-                      <motion.div
-                        key={photo.caption}
-                        animate={{
-                          x: photo.stackPosition * 10,
-                          y: photo.stackPosition * 9,
-                          rotate: rotation,
-                          scale: 1 - photo.stackPosition * 0.045,
-                          opacity: 1 - photo.stackPosition * 0.16,
-                        }}
-                        transition={{ duration: 1.55, ease: [0.16, 1, 0.3, 1] }}
-                        style={{ zIndex: galleryPhotos.length - photo.stackPosition }}
-                        className="absolute inset-0 transform-gpu overflow-hidden rounded-[1.75rem] border border-[#C48C78]/35 bg-[#451822] p-2 shadow-[0_18px_45px_rgba(0,0,0,0.38)] [backface-visibility:hidden] will-change-transform"
-                      >
-                        {!isPhotoLoaded && (
-                          <div className="absolute inset-2 flex items-center justify-center rounded-[1.35rem] bg-[linear-gradient(135deg,#2A0D14,#5A2430,#2A0D14)] p-6 text-center">
-                            <span className="font-sans text-[9px] uppercase tracking-[0.24em] text-[#D4B8BC]">Preparing photograph</span>
-                          </div>
-                        )}
-                        <picture className="block h-full w-full"><source srcSet={photo.webpSrcSet} sizes="(min-width: 768px) 384px, 92vw" type="image/webp" /><img src={photo.img} width="1200" height="1200" alt={photo.caption} draggable="false" loading="lazy" decoding="async" onLoad={() => setLoadedImageSources((sources) => sources.has(photo.preloadSrc) ? sources : new Set(sources).add(photo.preloadSrc))} className={`relative h-full w-full rounded-[1.35rem] object-cover transition-opacity duration-700 [backface-visibility:hidden] ${isPhotoLoaded ? 'opacity-100' : 'opacity-0'}`} /></picture>
-                        {photo.stackPosition === 0 && (
-                          <div className="absolute inset-x-2 bottom-2 rounded-b-[1.35rem] bg-gradient-to-t from-[#2A0D14]/90 via-[#2A0D14]/30 to-transparent px-5 pb-5 pt-12">
-                            <p className="font-serif text-lg text-[#F3E5E8]">{photo.caption}</p>
-                          </div>
-                        )}
-                      </motion.div>
-                    );
-                  })}
-                  <span className="absolute -bottom-9 left-0 right-0 text-center font-sans text-[10px] uppercase tracking-[0.32em] text-[#C48C78] transition-opacity duration-300 group-hover:opacity-100">Tap to open our album</span>
-                </motion.button>
-              )}
-            </AnimatePresence>
-            <AnimatePresence
-              initial={false}
-              onExitComplete={() => {
-                setGalleryScrollLocked(false);
-                if (restoreGalleryFocusRef.current) {
-                  galleryTriggerRef.current?.focus();
-                  restoreGalleryFocusRef.current = false;
-                }
+            <div
+              className="mx-auto w-full max-w-4xl"
+              role="region"
+              aria-roledescription="carousel"
+              aria-label="Stefano and Mhyka's wedding album"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowLeft') moveGallery(-1);
+                if (event.key === 'ArrowRight') moveGallery(1);
               }}
             >
-              {galleryMode === 'carousel' && (
-                <motion.div
-                  key="gallery-carousel"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: shouldReduceMotion ? 0.2 : 0.42, ease: [0.16, 1, 0.3, 1] }}
-                  className="fixed inset-0 z-[65] flex items-center justify-center bg-[#16070B]/80 p-5 backdrop-blur-sm"
-                  onClick={closeGalleryCarousel}
-                >
-                  <motion.section
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label="Wedding photo album"
-                    initial={{ opacity: 0, scale: 0.96, y: 12 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.96, y: 12 }}
-                    transition={{ duration: shouldReduceMotion ? 0.2 : 0.46, ease: [0.16, 1, 0.3, 1] }}
-                    onClick={(event) => event.stopPropagation()}
-                    onPointerDown={() => setGalleryIdleTick((tick) => tick + 1)}
-                    className="relative w-full max-w-3xl touch-pan-y overscroll-x-none"
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] border border-[#C48C78]/30 bg-[#2A0D14] shadow-[0_24px_70px_rgba(0,0,0,0.35)] md:aspect-[16/10]">
+                <AnimatePresence initial={false} custom={shouldReduceMotion ? 0 : galleryDirection}>
+                  <motion.figure
+                    key={activeGalleryPhoto.id}
+                    custom={shouldReduceMotion ? 0 : galleryDirection}
+                    variants={carouselSlideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ duration: shouldReduceMotion ? 0.15 : 0.55, ease: [0.22, 1, 0.36, 1] }}
+                    drag={canSwipeGallery ? 'x' : false}
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.06}
+                    onDragEnd={(_, info) => {
+                      if (Math.abs(info.offset.x) > 45) moveGallery(info.offset.x > 0 ? -1 : 1);
+                    }}
+                    className="absolute inset-0 m-0 touch-pan-y overflow-hidden"
+                    aria-roledescription="slide"
+                    aria-label={`${activeGalleryIndex + 1} of ${galleryPhotos.length}`}
                   >
-                    <div className="relative overflow-hidden rounded-[1.75rem] border border-[#C48C78]/35 bg-[#451822] p-2 shadow-[0_18px_45px_rgba(0,0,0,0.38)]">
-                      <motion.div key={`previous-${activeGalleryIndex}`} initial={{ opacity: 0 }} animate={{ opacity: 0.38 }} transition={{ duration: 0.5 }} className="pointer-events-none absolute inset-y-2 -left-[21%] w-[42%] overflow-hidden rounded-[1.35rem] blur-[1px]">
-                        <img src={galleryPhotos[(activeGalleryIndex - 1 + galleryPhotos.length) % galleryPhotos.length].preloadSrc} alt="" decoding="async" className="h-full w-full object-cover" />
-                      </motion.div>
-                      <motion.div key={`next-${activeGalleryIndex}`} initial={{ opacity: 0 }} animate={{ opacity: 0.38 }} transition={{ duration: 0.5 }} className="pointer-events-none absolute inset-y-2 -right-[21%] w-[42%] overflow-hidden rounded-[1.35rem] blur-[1px]">
-                        <img src={galleryPhotos[(activeGalleryIndex + 1) % galleryPhotos.length].preloadSrc} alt="" decoding="async" className="h-full w-full object-cover" />
-                      </motion.div>
-                      <div className="relative mx-auto w-[76%] aspect-[4/5] md:aspect-[16/10]">
-                      <AnimatePresence initial={false} custom={shouldReduceMotion ? 0 : galleryDirection}>
-                      <motion.figure
-                        key={galleryPhotos[activeGalleryIndex].caption}
-                        custom={shouldReduceMotion ? 0 : galleryDirection}
-                        variants={carouselSlideVariants}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        transition={{ duration: shouldReduceMotion ? 0.2 : 0.56, ease: [0.22, 1, 0.36, 1] }}
-                        drag={canSwipeGallery ? 'x' : false}
-                        dragConstraints={{ left: 0, right: 0 }}
-                        dragElastic={0.08}
-                        onDragEnd={(_, info) => {
-                          if (Math.abs(info.offset.x) > 45) moveGallery(info.offset.x > 0 ? -1 : 1);
-                        }}
-                        className="absolute inset-0 m-0 touch-pan-y overflow-hidden rounded-[1.35rem]"
-                      >
-                        {!isActiveGalleryPhotoLoaded && <div className="absolute inset-0 flex items-center justify-center bg-[linear-gradient(135deg,#2A0D14,#5A2430,#2A0D14)]"><span className="font-sans text-[9px] uppercase tracking-[0.24em] text-[#D4B8BC]">Preparing photograph</span></div>}
-                        <picture className="block h-full w-full"><source srcSet={activeGalleryPhoto.webpSrcSet} sizes="(min-width: 768px) 720px, 76vw" type="image/webp" /><img src={activeGalleryPhoto.img} width="1200" height="1200" alt={activeGalleryPhoto.caption} decoding="async" onLoad={() => setLoadedImageSources((sources) => sources.has(activeGalleryPhoto.preloadSrc) ? sources : new Set(sources).add(activeGalleryPhoto.preloadSrc))} className={`h-full w-full object-cover transition-opacity duration-700 ${isActiveGalleryPhotoLoaded ? 'opacity-100' : 'opacity-0'}`} /></picture>
-                        <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2A0D14]/90 to-transparent px-6 pb-6 pt-16 font-serif text-xl text-[#F3E5E8]">{galleryPhotos[activeGalleryIndex].caption}</figcaption>
-                      </motion.figure>
-                      </AnimatePresence>
-                      </div>
-                      <button type="button" onClick={() => moveGallery(-1)} className="absolute left-[8%] top-1/2 -translate-y-1/2 rounded-full border border-[#F3E5E8]/30 bg-[#2A0D14]/75 p-2 text-[#F3E5E8] backdrop-blur-sm" aria-label="Previous photo"><ChevronLeft className="h-5 w-5" /></button>
-                      <button type="button" onClick={() => moveGallery(1)} className="absolute right-[8%] top-1/2 -translate-y-1/2 rounded-full border border-[#F3E5E8]/30 bg-[#2A0D14]/75 p-2 text-[#F3E5E8] backdrop-blur-sm" aria-label="Next photo"><ChevronRight className="h-5 w-5" /></button>
-                    </div>
-                    {isMessengerInAppBrowser && <p className="mt-4 text-center font-sans text-[9px] uppercase tracking-[0.22em] text-[#D4B8BC]">Use the arrows to explore the album</p>}
-                    <button type="button" onClick={closeGalleryCarousel} className="mx-auto mt-5 block font-sans text-[10px] uppercase tracking-[0.28em] text-[#C48C78] transition-colors hover:text-[#F3E5E8]">Close album</button>
-                  </motion.section>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    {!isActiveGalleryPhotoLoaded && <div className="absolute inset-0 flex items-center justify-center bg-[linear-gradient(135deg,#2A0D14,#5A2430,#2A0D14)]"><span className="font-sans text-[9px] uppercase tracking-[0.24em] text-[#D4B8BC]">Preparing photograph</span></div>}
+                    <picture className="block h-full w-full"><source srcSet={activeGalleryPhoto.webpSrcSet} sizes="(min-width: 768px) 1200px, 100vw" type="image/webp" /><img src={activeGalleryPhoto.img} width="1200" height="600" alt={activeGalleryPhoto.alt} decoding="async" onLoad={() => setLoadedImageSources((sources) => sources.has(activeGalleryPhoto.preloadSrc) ? sources : new Set(sources).add(activeGalleryPhoto.preloadSrc))} className={`h-full w-full object-cover transition-opacity duration-500 ${isActiveGalleryPhotoLoaded ? 'opacity-100' : 'opacity-0'}`} /></picture>
+                    <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#16070B]/90 via-[#16070B]/35 to-transparent px-6 pb-6 pt-20 text-left font-serif text-xl text-[#F3E5E8] md:px-8 md:pb-8 md:text-2xl">{activeGalleryPhoto.caption}</figcaption>
+                  </motion.figure>
+                </AnimatePresence>
+                <button type="button" onClick={() => moveGallery(-1)} className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[#F3E5E8]/35 bg-[#16070B]/65 p-2.5 text-[#F3E5E8] backdrop-blur-md transition-colors hover:bg-[#C48C78] hover:text-[#36121A] md:left-5" aria-label="Previous photo"><ChevronLeft className="h-5 w-5" /></button>
+                <button type="button" onClick={() => moveGallery(1)} className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[#F3E5E8]/35 bg-[#16070B]/65 p-2.5 text-[#F3E5E8] backdrop-blur-md transition-colors hover:bg-[#C48C78] hover:text-[#36121A] md:right-5" aria-label="Next photo"><ChevronRight className="h-5 w-5" /></button>
+              </div>
+              <div className="mt-5 flex items-center justify-between gap-4">
+                <div className="flex shrink-0 items-center gap-3"><p className="font-sans text-[10px] tabular-nums tracking-[0.22em] text-[#D4B8BC]">{String(activeGalleryIndex + 1).padStart(2, '0')} / {String(galleryPhotos.length).padStart(2, '0')}</p>{!shouldReduceMotion && <button type="button" onClick={() => setIsGalleryPaused((paused) => !paused)} aria-pressed={isGalleryPaused} className="font-sans text-[9px] uppercase tracking-[0.16em] text-[#C48C78] transition-colors hover:text-[#F3E5E8]">{isGalleryPaused ? 'Play' : 'Pause'}</button>}</div>
+                <div className="flex flex-wrap justify-end gap-1.5" aria-label="Choose a photograph">
+                  {galleryPhotos.map((photo, index) => <button key={photo.id} type="button" onClick={() => { setGalleryDirection(index > activeGalleryIndex ? 1 : -1); setActiveGalleryIndex(index); }} aria-label={`View photo ${index + 1}: ${photo.caption}`} aria-current={index === activeGalleryIndex ? 'true' : undefined} className={`h-1.5 rounded-full transition-all ${index === activeGalleryIndex ? 'w-6 bg-[#C48C78]' : 'w-1.5 bg-[#C48C78]/35 hover:bg-[#C48C78]/70'}`} />)}
+                </div>
+              </div>
+              {activeGalleryIndex === galleryPhotos.length - 1 && <p className="mt-6 font-serif italic text-lg text-[#D4B8BC]">Thank you for being part of the story we are still writing.</p>}
+            </div>
           </div>
         </section>
 
         {/* SECTION 3: CEREMONY & RECEPTION */}
-        <section className="min-h-[100svh] w-full snap-start snap-always flex flex-col items-center justify-start px-6 py-12 md:h-[100svh] md:max-w-5xl md:justify-center md:px-20 md:py-16 mx-auto">
+        <section className="min-h-[100svh] w-full snap-start snap-always flex flex-col items-center justify-start px-6 pb-4 pt-4 md:h-[100svh] md:max-w-5xl md:justify-center md:px-20 md:py-16 mx-auto">
           <div className="w-full">
             <motion.div 
               initial="hidden"
@@ -1045,8 +961,8 @@ export default function App() {
                 whileHover={{ scale: 1.02 }}
                 className="relative overflow-hidden rounded-2xl border border-[#C8A96A]/60 bg-[#451822]/70 p-6 text-center shadow-xl backdrop-blur-sm transition-all duration-300"
               >
-                <img src={churchVenue} width="386" height="518" alt="Our Lady of Salvation Parish" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-100" />
-                <div className="absolute inset-0 bg-[#16070B]/70" />
+                <img src={churchVenueBackground} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-15 brightness-[1] saturate-[0.78]" />
+                <div className="absolute inset-0 bg-[#16070B]/68" />
                 <div className="relative z-10 flex h-full flex-col items-center drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
                 <motion.div 
                   animate={{ rotate: [0, 5, -5, 0] }}
@@ -1082,8 +998,8 @@ export default function App() {
                 whileHover={{ scale: 1.02 }}
                 className="relative overflow-hidden rounded-2xl border border-[#C8A96A]/60 bg-[#451822]/70 p-6 text-center shadow-xl backdrop-blur-sm transition-all duration-300"
               >
-                <img src={receptionVenueWebp} width="720" height="540" alt="F and C reception venue" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-100" />
-                <div className="absolute inset-0 bg-[#16070B]/70" />
+                <img src={receptionVenueBackground} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-20 brightness-[1] saturate-[0.82]" />
+                <div className="absolute inset-0 bg-[#16070B]/68" />
                 <div className="relative z-10 flex h-full flex-col items-center drop-shadow-[0_2px_5px_rgba(0,0,0,0.85)]">
                 <motion.div 
                   animate={{ rotate: [0, -5, 5, 0] }}
@@ -1123,8 +1039,8 @@ export default function App() {
                 <Shirt className="w-6 h-6 text-[#C48C78] mx-auto mb-2" />
                 <h3 className="text-lg font-serif font-light text-[#F3E5E8] mb-1">Dress Code</h3>
                 <p className="text-xs text-[#C48C78] font-medium mb-2">{schedule.dressCode.name}</p>
-                <div className="flex justify-center gap-2 my-3" aria-label="Rose gold and burgundy dress-code palette">
-                  {['#B76E79', '#B06676', '#A75D70', '#9E5268', '#954560', '#8C3655', '#842447', '#800020'].map((color) => (
+                <div className="flex justify-center gap-2 my-3" aria-label={`${schedule.dressCode.name} dress-code palette`}>
+                  {schedule.dressCode.colors.map((color) => (
                     <span key={color} className="h-5 w-5 rounded-full border border-[#F3E5E8]/30 shadow-md" style={{ backgroundColor: color }} />
                   ))}
                 </div>
@@ -1149,7 +1065,7 @@ export default function App() {
         </section>
 
         {/* SECTION 4: RSVP */}
-        <section className="h-[100svh] w-full snap-start snap-always flex flex-col items-center justify-center px-6 md:px-20 max-w-xl mx-auto overflow-y-auto no-scrollbar py-16">
+        <section className="min-h-[100svh] w-full snap-start snap-always flex flex-col items-center justify-start px-6 pb-8 pt-4 md:h-[100svh] md:justify-center md:overflow-y-auto md:px-20 md:py-16 max-w-xl mx-auto no-scrollbar">
           <div className="w-full">
             <motion.div 
               initial="hidden"
@@ -1157,10 +1073,17 @@ export default function App() {
               viewport={{ once: true }}
               variants={{
                 hidden: { opacity: 0, scale: 0.92, y: 20 },
-                visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.9, ease: "easeOut" } }
+                visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] } }
               }}
+              whileHover={shouldReduceMotion ? undefined : { y: -3, transition: { duration: 0.35, ease: 'easeOut' } }}
               className="bg-[#451822]/90 border border-[#C48C78]/40 p-8 md:p-10 rounded-3xl shadow-2xl backdrop-blur-md w-full relative overflow-hidden"
             >
+              <motion.div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 rotate-12 bg-gradient-to-r from-transparent via-[#F7E8B4]/10 to-transparent"
+                animate={shouldReduceMotion ? { opacity: 0 } : { x: ['0%', '450%'] }}
+                transition={{ duration: 1.5, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              />
               <div className="text-center mb-6">
                 <span className="text-xs uppercase tracking-[0.4em] text-[#C48C78] font-semibold block mb-2">Be Our Guest</span>
                 <h3 className="text-3xl font-serif font-light text-[#F3E5E8]">RSVP</h3>
@@ -1187,6 +1110,7 @@ export default function App() {
                         placeholder="Enter your full name"
                         value={formData.name}
                         onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        onFocus={bringRsvpFieldIntoView}
                         className="w-full bg-[#2A0D14] border border-[#C48C78]/50 rounded-xl px-4 py-2.5 text-sm text-[#F3E5E8] placeholder-[#D4B8BC]/40 focus:outline-none focus:border-[#C48C78] transition-colors"
                       />
                     </div>
@@ -1228,6 +1152,7 @@ export default function App() {
                         placeholder="Leave a sweet message..."
                         value={formData.message}
                         onChange={(e) => setFormData({...formData, message: e.target.value})}
+                        onFocus={bringRsvpFieldIntoView}
                         className="w-full bg-[#2A0D14] border border-[#C48C78]/50 rounded-xl px-4 py-2.5 text-sm text-[#F3E5E8] placeholder-[#D4B8BC]/40 focus:outline-none focus:border-[#C48C78] transition-colors"
                       />
                     </div>
@@ -1280,15 +1205,41 @@ export default function App() {
                 )}
               </AnimatePresence>
             </motion.div>
-            <div className="mt-8 space-y-3 text-left">
-              <h3 className="text-center font-serif text-2xl font-light text-[#F3E5E8]">A Few Helpful Notes</h3>
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.18 }}
+              variants={{
+                hidden: {},
+                visible: { transition: { staggerChildren: shouldReduceMotion ? 0 : 0.12, delayChildren: 0.08 } },
+              }}
+              className="mt-8 space-y-3 text-left"
+            >
+              <motion.h3
+                variants={{
+                  hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 12 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: 'easeOut' } },
+                }}
+                className="text-center font-serif text-2xl font-light text-[#F3E5E8]"
+              >
+                A Few Helpful Notes
+              </motion.h3>
               {faqs.map((faq) => (
-                <details key={faq.id} className="rounded-2xl border border-[#C48C78]/30 bg-[#451822]/55 px-5 py-4">
+                <motion.details
+                  key={faq.id}
+                  variants={{
+                    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 18, scale: shouldReduceMotion ? 1 : 0.98 },
+                    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+                  }}
+                  whileHover={shouldReduceMotion ? undefined : { y: -2, borderColor: 'rgba(196, 140, 120, 0.62)' }}
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.995 }}
+                  className="rsvp-note rounded-2xl border border-[#C48C78]/30 bg-[#451822]/55 px-5 py-4 shadow-lg transition-colors"
+                >
                   <summary className="cursor-pointer font-serif text-lg text-[#F3E5E8]">{faq.question}</summary>
                   <p className="mt-2 text-sm leading-relaxed text-[#D4B8BC]">{faq.answer}</p>
-                </details>
+                </motion.details>
               ))}
-            </div>
+            </motion.div>
             <footer className="pb-8 pt-10 text-center">
               <p className="font-serif italic text-lg text-[#F3E5E8]">Thank you for being part of our story.</p>
               <p className="mt-3 font-sans text-[9px] uppercase tracking-[0.2em] text-[#C48C78]">{branding.signature}</p>

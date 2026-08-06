@@ -1,6 +1,6 @@
-# Cloyd & Cyrin — Digital Wedding Invitation
+# Stefano & Mhyka — Digital Wedding Invitation
 
-A React, Vite, Tailwind CSS, Framer Motion, and Supabase wedding experience.
+A React, Vite, Tailwind CSS, Framer Motion, and Supabase wedding experience crafted by DreamZ.
 
 ## Local development
 
@@ -39,6 +39,6 @@ values are never stored.
 
 ## Wedding content
 
-The canonical wedding data is in `src/data/weddings/cloyd-cyrin.ts`. Update the
+The canonical wedding data is in `src/data/weddings/stefano-mhyka.ts`. Update the
 couple, schedule, locations, dress code, gifts, RSVP deadline, FAQs, and brand
 signature there rather than duplicating content in components.
