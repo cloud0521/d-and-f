@@ -2,18 +2,18 @@ import { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Calendar, MapPin, Clock, Shirt, Gift, CheckCircle2, ChevronLeft, ChevronRight, Send, Loader2, Eye, EyeOff } from 'lucide-react';
 
-import logoWebp from './logo-full.webp';
+import logoWebp from './logo.webp';
 import bibleWebp from './assets/bible.webp';
-import landingMobileBackground from './assets/landing-mobile.webp';
-import chapterOneMobileBackground from './assets/chapter-one-mobile.webp';
-import chapterOneBackground from './assets/gallery/gallery-11-1200.webp';
-import landingBackground from './assets/gallery/gallery-04-1200.webp';
+import landingMobileBackground from './assets/gallery/divine-francis-8.webp';
+import chapterOneMobileBackground from './assets/gallery/divine-francis-11.webp';
+import chapterOneBackground from './assets/gallery/divine-francis-3.webp';
+import landingBackground from './assets/gallery/divine-francis-9.webp';
 import churchVenueBackground from './assets/church-venue.webp';
 import receptionVenueBackground from './assets/reception-venue.webp';
 import CoordinatorMode from './components/dashboard/CoordinatorMode';
 import { isSupabaseConfigured, supabase, weddingSlug } from './lib/supabase';
 import { useWeddingExperience } from './contexts/WeddingExperienceContext';
-import { paolaRyanGallery as galleryPhotos } from './data/gallery';
+import { divineFrancisGallery as galleryPhotos } from './data/gallery';
 
 const RSVPDashboard = lazy(() => import('./components/dashboard/RSVPDashboard'));
 
@@ -29,7 +29,7 @@ const timelineEvents = [
   {
     year: "2019",
     title: "The Accidental Table",
-    description: "A crowded birthday dinner left one empty chair beside Paola. Ryan took it, and neither noticed how quickly the evening disappeared."
+    description: "Two lives crossed at just the right moment, and an ordinary day became the beginning of something extraordinary."
   },
   {
     year: "2020",
@@ -44,7 +44,7 @@ const timelineEvents = [
   {
     year: "2026",
     title: "The Yes by the Sea",
-    description: "At sunset, on the shore of their first trip together, Ryan asked Paola to choose him for every chapter still to come."
+    description: "With full hearts, Divine and Francis chose each other for every chapter still to come."
   }
 ];
 
@@ -470,7 +470,7 @@ export default function App() {
               width="2000"
               height="2000"
               alt={identity.monogramAlt}
-              className="h-auto w-[min(82vw,34rem)] object-contain drop-shadow-[0_0_35px_rgba(196,140,120,0.5)]"
+              className="h-auto w-[min(76vw,30rem)] object-contain brightness-0 invert sepia saturate-[0.55] drop-shadow-[0_0_28px_rgba(247,232,180,0.5)]"
               initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.28 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.28 }}
@@ -539,9 +539,9 @@ export default function App() {
                 whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
                 whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="w-36 h-36 md:w-44 md:h-44 mb-6 relative flex items-center justify-center cursor-zoom-in rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#C48C78]"
+                className="group relative mb-5 flex h-36 w-36 cursor-zoom-in items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#C8A96A] md:h-44 md:w-44 before:absolute before:inset-[16%] before:-z-10 before:rounded-full before:bg-[#C8A96A]/10 before:blur-2xl"
               >
-                <img src={logoWebp} width="2000" height="2000" alt={identity.monogramAlt} fetchPriority="high" className="h-full w-full object-contain filter drop-shadow-[0_0_20px_rgba(196,140,120,0.6)]" />
+                <img src={logoWebp} width="2000" height="2000" alt={identity.monogramAlt} fetchPriority="high" className="h-full w-full object-contain brightness-0 invert sepia saturate-[0.55] drop-shadow-[0_2px_8px_rgba(247,232,180,0.35)] transition-transform duration-700 group-hover:scale-[1.035]" />
               </motion.button>
 
               <p className="mb-8 font-sans text-[10px] uppercase tracking-[0.4em] text-[#C48C78] md:mb-1">You Are Cordially Invited</p>
@@ -775,14 +775,14 @@ export default function App() {
             alt=""
             aria-hidden="true"
             fetchPriority="high"
-            className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-28 blur-xl brightness-[0.8] saturate-[0.7] md:hidden"
+            className="pointer-events-none absolute inset-0 h-full w-full scale-105 object-cover object-center opacity-20 blur-lg brightness-[0.8] saturate-[0.7] md:hidden"
           />
           <img
             src={chapterOneMobileBackground}
             alt=""
             aria-hidden="true"
             fetchPriority="high"
-            className="pointer-events-none absolute inset-0 h-full w-full object-contain object-center opacity-56 brightness-[1.05] saturate-[0.76] md:hidden"
+            className="pointer-events-none absolute inset-0 h-full w-full scale-[1.04] object-cover object-[50%_46%] opacity-58 brightness-[1.05] saturate-[0.76] md:hidden"
           />
           <img
             src={chapterOneBackground}
@@ -850,9 +850,9 @@ export default function App() {
               whileHover={shouldReduceMotion ? undefined : { scale: 1.06 }}
               whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
               transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="w-32 h-32 md:w-40 md:h-40 mb-3 relative flex items-center justify-center cursor-zoom-in rounded-full filter drop-shadow-[0_0_25px_rgba(217,198,165,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D9C6A5]"
+              className="relative mb-4 flex h-36 w-36 cursor-zoom-in items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D9C6A5] md:h-44 md:w-44 before:absolute before:inset-[18%] before:-z-10 before:rounded-full before:bg-[#D9C6A5]/10 before:blur-2xl"
             >
-              <img src={logoWebp} width="2000" height="2000" alt={identity.monogramAlt} className="h-full w-full object-contain" />
+              <img src={logoWebp} width="2000" height="2000" alt={identity.monogramAlt} className="h-full w-full object-contain brightness-0 invert sepia saturate-[0.55] drop-shadow-[0_2px_8px_rgba(247,232,180,0.3)]" />
             </motion.button>
 
             <motion.div 
@@ -980,7 +980,7 @@ export default function App() {
               className="mx-auto w-full max-w-4xl"
               role="region"
               aria-roledescription="carousel"
-              aria-label="Paola and Ryan's wedding album"
+              aria-label="Divine and Francis's wedding album"
               tabIndex={0}
               onKeyDown={(event) => {
                 if (event.key === 'ArrowLeft') moveGallery(-1);

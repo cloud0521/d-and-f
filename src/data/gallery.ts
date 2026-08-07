@@ -1,45 +1,42 @@
-import gallery01Small from '../assets/gallery/gallery-01-720.webp';
-import gallery01Large from '../assets/gallery/gallery-01-1200.webp';
-import gallery02Small from '../assets/gallery/gallery-02-720.webp';
-import gallery02Large from '../assets/gallery/gallery-02-1200.webp';
-import gallery03Small from '../assets/gallery/gallery-03-720.webp';
-import gallery03Large from '../assets/gallery/gallery-03-1200.webp';
-import gallery04Small from '../assets/gallery/gallery-04-720.webp';
-import gallery04Large from '../assets/gallery/gallery-04-1200.webp';
-import gallery05Small from '../assets/gallery/gallery-05-720.webp';
-import gallery05Large from '../assets/gallery/gallery-05-1200.webp';
-import gallery06Small from '../assets/gallery/gallery-06-720.webp';
-import gallery06Large from '../assets/gallery/gallery-06-1200.webp';
-import gallery07Small from '../assets/gallery/gallery-07-720.webp';
-import gallery07Large from '../assets/gallery/gallery-07-1200.webp';
-import gallery08Small from '../assets/gallery/gallery-08-720.webp';
-import gallery08Large from '../assets/gallery/gallery-08-1200.webp';
-import gallery09Small from '../assets/gallery/gallery-09-720.webp';
-import gallery09Large from '../assets/gallery/gallery-09-1200.webp';
-import gallery10Small from '../assets/gallery/gallery-10-720.webp';
-import gallery10Large from '../assets/gallery/gallery-10-1200.webp';
-import gallery11Small from '../assets/gallery/gallery-11-720.webp';
-import gallery11Large from '../assets/gallery/gallery-11-1200.webp';
+import photo01 from '../assets/gallery/divine-francis-1.webp';
+import photo02 from '../assets/gallery/divine-francis-3.webp';
+import photo03 from '../assets/gallery/divine-francis-4.webp';
+import photo04 from '../assets/gallery/divine-francis-5.webp';
+import photo05 from '../assets/gallery/divine-francis-6.webp';
+import photo06 from '../assets/gallery/divine-francis-7.webp';
+import photo07 from '../assets/gallery/divine-francis-8.webp';
+import photo08 from '../assets/gallery/divine-francis-9.webp';
+import photo09 from '../assets/gallery/divine-francis-10.webp';
+import photo10 from '../assets/gallery/divine-francis-11.webp';
+import photo11 from '../assets/gallery/divine-francis-12.webp';
+import photo12 from '../assets/gallery/divine-francis-13.webp';
+import photo13 from '../assets/gallery/divine-francis-14.webp';
+import photo14 from '../assets/gallery/divine-francis-15.webp';
+import photo15 from '../assets/divine-francis-pool.webp';
 
-const photo = (id: string, small: string, large: string, caption: string, alt: string) => ({
+const photo = (id: string, img: string, caption: string, alt: string) => ({
   id,
-  img: small,
-  webpSrcSet: `${small} 720w, ${large} 1200w`,
-  preloadSrc: large,
+  img,
+  webpSrcSet: undefined,
+  preloadSrc: img,
   caption,
   alt,
 });
 
-export const paolaRyanGallery = [
-  photo('our-horizon', gallery01Small, gallery01Large, 'Where Forever Begins', 'Paola and Ryan together on a sunlit hill beneath an open sky'),
-  photo('reaching-for-you', gallery02Small, gallery02Large, 'Always Reaching for You', 'Paola and Ryan reaching for one another on a grassy hill'),
-  photo('promise-in-bloom', gallery03Small, gallery03Large, 'A Promise in Bloom', 'Paola and Ryan smiling together with a white bouquet'),
-  photo('dance-in-the-light', gallery04Small, gallery04Large, 'Dancing in the Light', 'Paola and Ryan dancing against a mountain view'),
-  photo('quiet-happiness', gallery05Small, gallery05Large, 'The Joy You Bring', 'Paola smiling with flowers while Ryan looks on'),
-  photo('chasing-sunsets', gallery06Small, gallery06Large, 'Chasing Sunsets Together', 'Paola and Ryan running hand in hand along the shore at sunset'),
-  photo('evening-promise', gallery07Small, gallery07Large, 'Into Every Sunset', 'Paola and Ryan holding hands before a vivid sunset'),
-  photo('sparkler-light', gallery08Small, gallery08Large, 'You Are My Light', 'Paola and Ryan smiling together with sparklers by the sea'),
-  photo('close-to-you', gallery09Small, gallery09Large, 'Close to You', 'Paola resting her head on Ryan while watching the sunset'),
-  photo('by-the-water', gallery10Small, gallery10Large, 'In Every Light', 'Ryan looking at Paola beside the water at twilight'),
-  photo('side-by-side', gallery11Small, gallery11Large, 'Side by Side', 'Paola and Ryan walking hand in hand through a sunlit field'),
+export const divineFrancisGallery = [
+  photo('our-beginning', photo01, 'Where Our Story Begins', 'A cinematic opening from Divine and Francis\'s prenup film'),
+  photo('a-love-in-bloom', photo02, 'A Love in Bloom', 'Divine and Francis sharing a flower beneath a blue sky'),
+  photo('closer-still', photo03, 'Closer Still', 'Divine and Francis embracing in the garden'),
+  photo('all-my-heart', photo04, 'All My Heart', 'Divine holding Francis\'s face as they smile together'),
+  photo('gentle-promise', photo05, 'A Gentle Promise', 'Francis kissing Divine on the forehead'),
+  photo('joy-like-sunlight', photo06, 'Joy Like Sunlight', 'Divine and Francis laughing among sparkling bubbles'),
+  photo('weathering-together', photo07, 'Whatever the Weather', 'Divine and Francis smiling together beneath a clear umbrella'),
+  photo('under-one-sky', photo08, 'Under One Sky', 'Divine and Francis looking into each other\'s eyes beneath an umbrella'),
+  photo('favorite-place', photo09, 'My Favorite Place', 'Divine hugging Francis from behind'),
+  photo('playful-hearts', photo10, 'Playful Hearts', 'Divine and Francis sharing a playful portrait'),
+  photo('swept-away', photo11, 'Swept Away', 'Francis carrying Divine as they laugh together'),
+  photo('only-you', photo12, 'Only You', 'Divine and Francis sharing a quiet moment beside a tree'),
+  photo('little-moments', photo13, 'The Little Moments', 'Divine and Francis laughing over a handwritten note'),
+  photo('forever-in-view', photo14, 'Forever in View', 'Divine and Francis framed against a dramatic blue sky'),
+  photo('adventure-ahead', photo15, 'Our Greatest Adventure', 'Divine and Francis sharing a playful moment beside the pool'),
 ];

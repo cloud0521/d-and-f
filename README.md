@@ -1,4 +1,4 @@
-# Paola & Ryan — Digital Wedding Invitation
+# Divine & Francis — Digital Wedding Invitation
 
 A reusable React, Vite, Tailwind CSS, Framer Motion, and Supabase wedding experience crafted by DreamZ.
 

@@ -23,7 +23,7 @@ export default function CoordinatorMode({ onClose }) {
           <div>
             <p className="font-sans text-[10px] uppercase tracking-[0.34em] text-[#C48C78]">Event-day workspace</p>
             <h1 id="coordinator-title" className="m-0 mt-2 font-serif text-3xl font-light text-[#F3E5E8] md:text-5xl">Coordinator Mode</h1>
-            <p className="mt-2 font-serif text-sm italic text-[#D4B8BC]">Paola &amp; Ryan · May 22, 2027</p>
+            <p className="mt-2 font-serif text-sm italic text-[#D4B8BC]">Divine &amp; Francis · May 22, 2027</p>
           </div>
           <button type="button" onClick={onClose} className="rounded-full border border-[#C48C78]/35 bg-[#451822]/70 p-2 text-[#F3E5E8] transition-colors hover:border-[#C48C78]" aria-label="Close Coordinator Mode"><X className="h-5 w-5" /></button>
         </header>

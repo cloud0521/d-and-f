@@ -1,12 +1,12 @@
 import type { WeddingExperience } from '../../types/wedding';
-import { paolaRyanGallery } from '../gallery';
+import { divineFrancisGallery } from '../gallery';
 
-export const paolaRyanWedding: WeddingExperience = {
+export const divineFrancisWedding: WeddingExperience = {
   identity: {
-    slug: 'paola-and-ryan',
-    coupleNames: 'Paola & Ryan',
-    shortNames: 'P & R',
-    monogramAlt: 'Paola and Ryan wedding monogram',
+    slug: 'divine-and-francis',
+    coupleNames: 'Divine & Francis',
+    shortNames: 'D & F',
+    monogramAlt: 'Divine and Francis wedding monogram',
     weddingDate: '2027-05-22T15:00:00+08:00',
   },
   branding: {
@@ -51,15 +51,15 @@ export const paolaRyanWedding: WeddingExperience = {
       blocks: [{
         type: 'timeline',
         items: [
-          { label: '2019', title: 'The Accidental Table', description: 'A crowded birthday dinner left one empty chair beside Paola. Ryan took it, and neither of them noticed how quickly the evening disappeared.' },
+          { label: '2019', title: 'The Beginning', description: 'Two lives crossed at just the right moment, and an ordinary day became the beginning of something extraordinary.' },
           { label: '2020', title: 'Love, From a Distance', description: 'When the world slowed down, their story kept moving through midnight calls, handwritten notes, and Sunday breakfasts over video.' },
           { label: '2023', title: 'A Life in the Little Things', description: 'New jobs, road trips, rescued plants, and ordinary Tuesdays became proof that home was never a place—it was each other.' },
-          { label: '2026', title: 'The Yes by the Sea', description: 'At sunset, on the shore where they had taken their first trip together, Ryan asked Paola to choose him for every chapter still to come.' },
+          { label: '2026', title: 'The Promise', description: 'With full hearts, Divine and Francis chose each other for every chapter still to come.' },
         ],
       }],
     },
   ],
-  gallery: paolaRyanGallery.map(({ id, preloadSrc, alt, caption }) => ({ id, src: preloadSrc, alt, caption })),
+  gallery: divineFrancisGallery.map(({ id, preloadSrc, alt, caption }) => ({ id, src: preloadSrc, alt, caption })),
   entourage: [
     { id: 'maid-of-honor', name: 'Elena Reyes', role: 'Maid of Honor' },
     { id: 'best-man', name: 'Marco Villanueva', role: 'Best Man' },
