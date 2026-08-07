@@ -420,7 +420,7 @@ export default function App() {
                 type="text"
                 inputMode="text"
                 spellCheck="false"
-                placeholder="p-and-r"
+                placeholder="d-and-f"
                 value={adminOwnerId}
                 onChange={(event) => setAdminOwnerId(event.target.value)}
                 className="mt-2 w-full rounded-xl border border-[#C8A96A]/35 bg-[#2A0D14] px-4 py-3 font-serif text-lg text-[#F3E5E8] outline-none focus:border-[#C8A96A]"
