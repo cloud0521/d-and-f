@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Download, Search, Trash2, Users, X, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Download, ExternalLink, Search, Trash2, Users, X, XCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 const formatGuestName = (name) => name
@@ -15,8 +15,8 @@ const escapeCsvCell = (value) => {
 export default function RSVPDashboard({ rows, weddingName, onClose, onManageDuplicate }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [responseFilter, setResponseFilter] = useState('all');
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportError, setExportError] = useState('');
+  const [browserHelp, setBrowserHelp] = useState('');
+  const isMessengerBrowser = useMemo(() => /FBAN|FBAV|Messenger/i.test(navigator.userAgent), []);
   const filteredRows = useMemo(
     () => rows.filter((row) => {
       const matchesSearch = row.full_name.toLowerCase().includes(searchQuery.trim().toLowerCase());
@@ -38,43 +38,28 @@ export default function RSVPDashboard({ rows, weddingName, onClose, onManageDupl
     { id: 'duplicates', label: 'Duplicates', value: duplicateResponses, icon: AlertTriangle },
   ];
 
-  const downloadCsv = async () => {
-    setIsExporting(true);
-    setExportError('');
-    const headers = ['Guest name', 'Attendance', 'Guest count', 'Wishes for the couple', 'Submitted at'];
-    const records = rows.map((row) => [
-      formatGuestName(row.full_name),
-      row.attendance === 'yes' ? 'Accepted' : 'Declined',
-      row.guest_count,
-      row.message || '',
-      row.created_at ? new Date(row.created_at).toISOString() : '',
-    ]);
-    const csv = [headers, ...records].map((record) => record.map(escapeCsvCell).join(',')).join('\r\n');
-    const filename = `${weddingName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-rsvp-responses.csv`;
-    const file = new File([`\uFEFF${csv}`], filename, { type: 'text/csv;charset=utf-8' });
+  const downloadCsv = () => {
+    const headers = ['Guest name', 'Attendance', 'Guest count', 'Wishes for the couple', 'Submitted at', 'Possible duplicate'];
+    const records = rows.map((row) => [formatGuestName(row.full_name), row.attendance === 'yes' ? 'Accepted' : 'Declined', row.guest_count, row.message || '', row.created_at || '', row.possible_duplicate ? 'Yes' : 'No']);
+    const csv = `\uFEFF${[headers, ...records].map((record) => record.map(escapeCsvCell).join(',')).join('\r\n')}`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${weddingName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-rsvp-responses.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  };
 
-    try {
-      const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
-        || window.matchMedia?.('(pointer: coarse)').matches;
-      if (isMobileDevice && navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: `${weddingName} RSVP responses`, files: [file] });
-        return;
-      }
-
-      const url = URL.createObjectURL(file);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch (error) {
-      if (error?.name !== 'AbortError') setExportError('This browser could not save the CSV. Open the invitation in Safari or Chrome and try again.');
-    } finally {
-      setIsExporting(false);
+  const openInSystemBrowser = () => {
+    const currentUrl = new URL(window.location.href);
+    if (/Android/i.test(navigator.userAgent)) {
+      window.location.href = `intent://${currentUrl.host}${currentUrl.pathname}${currentUrl.search}#Intent;scheme=${currentUrl.protocol.replace(':', '')};package=com.android.chrome;end`;
+      return;
     }
+    setBrowserHelp('On iPhone, tap the ••• menu in Messenger, then choose Open in Browser or Open in Safari. Apple does not allow websites to launch Safari directly.');
   };
 
   return (
@@ -90,6 +75,7 @@ export default function RSVPDashboard({ rows, weddingName, onClose, onManageDupl
         </header>
 
         <main className="mt-8 space-y-6">
+          {isMessengerBrowser && <div className="rounded-2xl border border-[#C8A96A]/45 bg-[#451822]/70 p-4"><p className="font-serif text-lg text-[#F7E8B4]">Downloads work best in your browser.</p><p className="mt-1 text-sm text-[#D4B8BC]">Open this dashboard in Chrome or Safari, sign in again, then download the CSV.</p><button type="button" onClick={openInSystemBrowser} className="mt-3 flex items-center gap-2 rounded-full bg-[#C8A96A] px-4 py-2.5 font-sans text-[9px] uppercase tracking-[0.16em] text-[#2A0D14]"><ExternalLink className="h-4 w-4" aria-hidden="true" />Open in browser</button>{browserHelp && <p className="mt-3 rounded-xl bg-[#2A0D14]/60 p-3 text-sm leading-relaxed text-[#F3E5E8]">{browserHelp}</p>}</div>}
           <div className="grid grid-cols-4 gap-1.5 md:gap-3">
             {responseCards.map(({ id, label, value, icon: Icon }) => {
               const isActive = responseFilter === id;
@@ -115,12 +101,11 @@ export default function RSVPDashboard({ rows, weddingName, onClose, onManageDupl
                 <Search className="h-5 w-5 shrink-0 text-[#C8A96A]" />
                 <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search guest name" className="min-w-0 flex-1 bg-transparent font-serif text-lg text-[#F3E5E8] outline-none placeholder:text-[#D4B8BC]/45" />
               </label>
-              <button type="button" onClick={downloadCsv} disabled={!rows.length || isExporting} className="flex items-center justify-center gap-2 rounded-2xl border border-[#C8A96A]/55 bg-[#C8A96A] px-4 py-3 font-sans text-[9px] uppercase tracking-[0.16em] text-[#2A0D14] transition-colors hover:bg-[#E2C889] disabled:cursor-not-allowed disabled:opacity-45">
+              <button type="button" onClick={downloadCsv} disabled={!rows.length} className="flex items-center justify-center gap-2 rounded-2xl border border-[#C8A96A]/55 bg-[#C8A96A] px-4 py-3 font-sans text-[9px] uppercase tracking-[0.16em] text-[#2A0D14] transition-colors hover:bg-[#E2C889] disabled:cursor-not-allowed disabled:opacity-45">
                 <Download className="h-4 w-4" aria-hidden="true" />
-                {isExporting ? 'Preparing...' : 'Download CSV'}
+                Download CSV
               </button>
             </div>
-            {exportError && <p className="mt-3 text-sm text-[#F3B5AD]">{exportError}</p>}
             <ul className="mt-5 divide-y divide-[#C8A96A]/20">
               {filteredRows.map((row) => (
                 <li key={row.id} className="py-4">
