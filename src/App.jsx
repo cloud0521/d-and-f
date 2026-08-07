@@ -98,12 +98,14 @@ export default function App() {
   const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false);
   const [dashboardRows, setDashboardRows] = useState([]);
   const [dashboardWeddingName, setDashboardWeddingName] = useState(identity.coupleNames);
+  const [dashboardCredentials, setDashboardCredentials] = useState(null);
   const [loadedImageCount, setLoadedImageCount] = useState(0);
   const [loadedImageSources, setLoadedImageSources] = useState(() => new Set());
   const [isLogoExpanded, setIsLogoExpanded] = useState(false);
   
   // RSVP Form States
   const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
+  const [rsvpPossibleDuplicate, setRsvpPossibleDuplicate] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: '', guests: '1', attendance: 'yes', message: '' });
   const [timeRemaining, setTimeRemaining] = useState(() => Math.max(0, new Date(identity.weddingDate).getTime() - Date.now()));
@@ -330,7 +332,7 @@ export default function App() {
 
     try {
       if (!supabase) throw new Error('Supabase is not configured.');
-      const { error } = await supabase.rpc('submit_wedding_rsvp', {
+      const { data, error } = await supabase.rpc('submit_wedding_rsvp', {
         p_wedding_slug: deploymentWeddingSlug,
         p_full_name: formData.name.trim(),
         p_attendance: formData.attendance,
@@ -338,6 +340,7 @@ export default function App() {
         p_message: formData.message.trim() || null,
       });
       if (error) throw error;
+      setRsvpPossibleDuplicate(Boolean(data?.possible_duplicate));
       setRsvpSubmitted(true);
     } catch (error) {
       console.error('Error submitting RSVP:', error);
@@ -351,6 +354,7 @@ export default function App() {
 
   const handleSubmitAnotherRsvp = () => {
     setFormData({ name: '', guests: '1', attendance: 'yes', message: '' });
+    setRsvpPossibleDuplicate(false);
     setRsvpSubmitted(false);
   };
 
@@ -381,6 +385,7 @@ export default function App() {
 
       setDashboardRows(submissions ?? []);
       setDashboardWeddingName(identity.coupleNames);
+      setDashboardCredentials({ username: normalizedOwnerId, password: adminPassword });
       setAdminOwnerId('');
       setAdminPassword('');
       setIsAdminPasswordVisible(false);
@@ -399,12 +404,38 @@ export default function App() {
   const handleCloseDashboard = () => {
     setIsAdminDashboardOpen(false);
     setDashboardRows([]);
+    setDashboardCredentials(null);
+  };
+
+  const handleManageDuplicate = async (submissionId, action) => {
+    if (!supabase || !dashboardCredentials) return;
+    const confirmation = action === 'keep'
+      ? 'Keep this response and permanently remove the other responses with the same guest name?'
+      : 'Permanently remove this RSVP response?';
+    if (!window.confirm(confirmation)) return;
+    const { error } = await supabase.rpc('manage_duplicate_rsvp', {
+      p_wedding_slug: deploymentWeddingSlug,
+      p_username: dashboardCredentials.username,
+      p_password: dashboardCredentials.password,
+      p_action: action,
+      p_submission_id: submissionId,
+    });
+    if (error) {
+      alert('Unable to update this response. Please try again.');
+      return;
+    }
+    const { data: submissions, error: refreshError } = await supabase.rpc('get_wedding_rsvp_dashboard', {
+      p_wedding_slug: deploymentWeddingSlug,
+      p_username: dashboardCredentials.username,
+      p_password: dashboardCredentials.password,
+    });
+    if (!refreshError) setDashboardRows(submissions ?? []);
   };
 
   return (
     <div className="bg-[#36121A] text-[#F3E5E8] font-serif selection:bg-[#C48C78]/30 selection:text-[#36121A] h-[100svh] w-screen overflow-hidden relative antialiased flex flex-col">
       {showCoordinatorMode && <CoordinatorMode onClose={() => setShowCoordinatorMode(false)} />}
-      {isAdminDashboardOpen && <Suspense fallback={null}><RSVPDashboard rows={dashboardRows} weddingName={dashboardWeddingName} onClose={handleCloseDashboard} /></Suspense>}
+      {isAdminDashboardOpen && <Suspense fallback={null}><RSVPDashboard rows={dashboardRows} weddingName={dashboardWeddingName} onClose={handleCloseDashboard} onManageDuplicate={handleManageDuplicate} /></Suspense>}
       <AnimatePresence>
         {isAdminPasswordOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[75] flex items-center justify-center bg-[#16070B]/80 p-6 backdrop-blur-sm">
@@ -1285,6 +1316,7 @@ export default function App() {
                         ? "We have successfully recorded your response. We can't wait to celebrate our special day with you!"
                         : "We are sorry you won't be able to make it, but thank you for letting us know."}
                     </p>
+                    {rsvpPossibleDuplicate && <p className="mx-auto max-w-md rounded-xl border border-[#C8A96A]/35 bg-[#2A0D14]/45 px-4 py-3 text-sm text-[#F7E8B4]">A similar guest name has already submitted an RSVP. Your response was saved separately and marked for the couple to review—nothing was overwritten.</p>}
                     <button
                       type="button"
                       onClick={handleSubmitAnotherRsvp}
