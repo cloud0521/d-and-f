@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { stefanoMhykaWedding } from '../data/weddings/stefano-mhyka';
+import { paolaRyanWedding } from '../data/weddings/paola-ryan';
 import { AppProviders } from './providers';
 
 export function AppShell({ children }: { children: ReactNode }) {
-  return <AppProviders experience={stefanoMhykaWedding}>{children}</AppProviders>;
+  return <AppProviders experience={paolaRyanWedding}>{children}</AppProviders>;
 }

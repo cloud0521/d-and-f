@@ -1,12 +1,12 @@
 import type { WeddingExperience } from '../../types/wedding';
-import { stefanoMhykaGallery } from '../gallery';
+import { paolaRyanGallery } from '../gallery';
 
-export const stefanoMhykaWedding: WeddingExperience = {
+export const paolaRyanWedding: WeddingExperience = {
   identity: {
-    slug: 'stefano-and-mhyka',
-    coupleNames: 'Stefano & Mhyka',
-    shortNames: 'S & M',
-    monogramAlt: 'Stefano and Mhyka wedding monogram',
+    slug: 'paola-and-ryan',
+    coupleNames: 'Paola & Ryan',
+    shortNames: 'P & R',
+    monogramAlt: 'Paola and Ryan wedding monogram',
     weddingDate: '2027-05-22T15:00:00+08:00',
   },
   branding: {
@@ -51,15 +51,15 @@ export const stefanoMhykaWedding: WeddingExperience = {
       blocks: [{
         type: 'timeline',
         items: [
-          { label: '2019', title: 'The Accidental Table', description: 'A crowded birthday dinner left one empty chair beside Mhyka. Stefano took it, and neither of them noticed how quickly the evening disappeared.' },
+          { label: '2019', title: 'The Accidental Table', description: 'A crowded birthday dinner left one empty chair beside Paola. Ryan took it, and neither of them noticed how quickly the evening disappeared.' },
           { label: '2020', title: 'Love, From a Distance', description: 'When the world slowed down, their story kept moving through midnight calls, handwritten notes, and Sunday breakfasts over video.' },
           { label: '2023', title: 'A Life in the Little Things', description: 'New jobs, road trips, rescued plants, and ordinary Tuesdays became proof that home was never a place—it was each other.' },
-          { label: '2026', title: 'The Yes by the Sea', description: 'At sunset, on the shore where they had taken their first trip together, Stefano asked Mhyka to choose him for every chapter still to come.' },
+          { label: '2026', title: 'The Yes by the Sea', description: 'At sunset, on the shore where they had taken their first trip together, Ryan asked Paola to choose him for every chapter still to come.' },
         ],
       }],
     },
   ],
-  gallery: stefanoMhykaGallery.map(({ id, preloadSrc, alt, caption }) => ({ id, src: preloadSrc, alt, caption })),
+  gallery: paolaRyanGallery.map(({ id, preloadSrc, alt, caption }) => ({ id, src: preloadSrc, alt, caption })),
   entourage: [
     { id: 'maid-of-honor', name: 'Elena Reyes', role: 'Maid of Honor' },
     { id: 'best-man', name: 'Marco Villanueva', role: 'Best Man' },

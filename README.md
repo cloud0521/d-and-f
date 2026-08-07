@@ -1,6 +1,6 @@
-# Stefano & Mhyka — Digital Wedding Invitation
+# Paola & Ryan — Digital Wedding Invitation
 
-A React, Vite, Tailwind CSS, Framer Motion, and Supabase wedding experience crafted by DreamZ.
+A reusable React, Vite, Tailwind CSS, Framer Motion, and Supabase wedding experience crafted by DreamZ.
 
 ## Local development
 
@@ -9,8 +9,8 @@ npm install
 npm run dev
 ```
 
-The npm scripts invoke their local Node entry points directly. This keeps them
-working on Windows even when a parent folder contains an ampersand (`&`).
+The npm scripts invoke their local Node entry points directly so they continue
+working on Windows when a parent folder contains an ampersand (`&`).
 
 ## Production checks
 
@@ -20,25 +20,112 @@ npm run build
 npm run preview
 ```
 
-## Supabase setup
+## One Supabase project for every wedding
 
-1. Create a Supabase project.
-2. For a new database, run `supabase/migrations/20260806_create_rsvp_dashboard.sql` in the SQL editor. If the RSVP tables already exist, run `supabase/migrations/20260806_add_secure_admin_configuration.sql` instead.
-3. In the SQL editor, configure a unique administrator password of at least 12 characters:
+All client weddings share one Supabase project. Tenant isolation is enforced by
+`wedding_id`, tenant-scoped database functions, and Row Level Security. Each deployment uses the
+same project URL and publishable key; only `VITE_WEDDING_SLUG` changes.
 
-```sql
-select public.configure_invitation_admin('replace-with-a-long-unique-password'::text);
+### One-time project setup
+
+1. Open the Supabase SQL editor for the shared project.
+2. Run `supabase/migrations/20260807_multi_tenant_weddings.sql` in full.
+3. Run `supabase/migrations/20260808_username_dashboard.sql` in full. This
+   creates Paola and Ryan's initial tenant-scoped dashboard credentials:
+
+```text
+Invitation ID: p-and-r
+Password: p-and-r-Password
 ```
 
-4. Copy `.env.example` to `.env.local` and provide the project URL and publishable key.
-5. Never commit `.env.local` or the administrator password.
+Use the temporary password only during setup and replace it before sharing the
+dashboard credentials with a client.
 
-Guests can only insert RSVP records. The dashboard read operation validates the
-administrator password inside a security-definer database function; raw password
-values are never stored.
+### Deployment environment
+
+Copy `.env.example` to `.env.local` and configure:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+VITE_WEDDING_SLUG=paola-and-ryan
+```
+
+The publishable key is allowed in the frontend. Never place a Supabase secret or
+service-role key in a `VITE_` variable, source file, deployment bundle, or client
+website.
+
+### Adding another client wedding
+
+Create one tenant row:
+
+```sql
+insert into public.weddings (
+  slug,
+  couple_names,
+  wedding_date,
+  template_id,
+  status
+) values (
+  'client-one-and-client-two',
+  'Client One & Client Two',
+  '2028-01-15T15:00:00+08:00',
+  'elegant-floral',
+  'active'
+);
+```
+
+Configure that wedding's dashboard ID and password:
+
+```sql
+select public.configure_wedding_owner(
+  'client-one-and-client-two',
+  'client-one-and-client-two',
+  'replace-with-a-strong-temporary-password'
+);
+```
+
+Then deploy the template with that client's slug:
+
+```env
+VITE_WEDDING_SLUG=client-one-and-client-two
+```
+
+The dashboard function verifies the password hash and returns RSVPs only for the
+wedding attached to that invitation ID. Public guests cannot insert directly
+into the RSVP table; they can only call the validated `submit_wedding_rsvp`
+function for an active wedding slug.
+
+### Changing an owner password
+
+Run the configuration function again. It replaces the stored bcrypt hash without
+exposing the existing password:
+
+```sql
+select public.configure_wedding_owner(
+  'paola-and-ryan',
+  'p-and-r',
+  'the-new-password-requested-by-the-owner'
+);
+```
+
+### Existing single-wedding RSVP rows
+
+The multi-tenant migration preserves old rows but leaves their `wedding_id`
+empty because it cannot safely guess ownership. If all legacy rows belong to
+Paola and Ryan, backfill them once:
+
+```sql
+update public.rsvp_submissions submission
+set wedding_id = wedding.id
+from public.weddings wedding
+where wedding.slug = 'paola-and-ryan'
+  and submission.wedding_id is null;
+```
 
 ## Wedding content
 
-The canonical wedding data is in `src/data/weddings/stefano-mhyka.ts`. Update the
-couple, schedule, locations, dress code, gifts, RSVP deadline, FAQs, and brand
-signature there rather than duplicating content in components.
+The canonical content is in `src/data/weddings/paola-ryan.ts`. Update the couple,
+schedule, locations, dress code, gifts, RSVP deadline, FAQs, and brand signature
+there. The deployment slug must match the corresponding `public.weddings.slug`.
+"# p-and-r" 

@@ -4,14 +4,16 @@ import { Calendar, MapPin, Clock, Shirt, Gift, CheckCircle2, ChevronLeft, Chevro
 
 import logoWebp from './logo-full.webp';
 import bibleWebp from './assets/bible.webp';
-import chapterOneBackground from './assets/gallery/gallery-05-720.webp';
-import landingBackground from './assets/gallery/gallery-13-1200.webp';
+import landingMobileBackground from './assets/landing-mobile.webp';
+import chapterOneMobileBackground from './assets/chapter-one-mobile.webp';
+import chapterOneBackground from './assets/gallery/gallery-11-1200.webp';
+import landingBackground from './assets/gallery/gallery-04-1200.webp';
 import churchVenueBackground from './assets/church-venue.webp';
 import receptionVenueBackground from './assets/reception-venue.webp';
 import CoordinatorMode from './components/dashboard/CoordinatorMode';
-import { isSupabaseConfigured, supabase } from './lib/supabase';
+import { isSupabaseConfigured, supabase, weddingSlug } from './lib/supabase';
 import { useWeddingExperience } from './contexts/WeddingExperienceContext';
-import { stefanoMhykaGallery as galleryPhotos } from './data/gallery';
+import { paolaRyanGallery as galleryPhotos } from './data/gallery';
 
 const RSVPDashboard = lazy(() => import('./components/dashboard/RSVPDashboard'));
 
@@ -27,7 +29,7 @@ const timelineEvents = [
   {
     year: "2019",
     title: "The Accidental Table",
-    description: "A crowded birthday dinner left one empty chair beside Mhyka. Stefano took it, and neither noticed how quickly the evening disappeared."
+    description: "A crowded birthday dinner left one empty chair beside Paola. Ryan took it, and neither noticed how quickly the evening disappeared."
   },
   {
     year: "2020",
@@ -42,7 +44,7 @@ const timelineEvents = [
   {
     year: "2026",
     title: "The Yes by the Sea",
-    description: "At sunset, on the shore of their first trip together, Stefano asked Mhyka to choose him for every chapter still to come."
+    description: "At sunset, on the shore of their first trip together, Ryan asked Paola to choose him for every chapter still to come."
   }
 ];
 
@@ -88,12 +90,14 @@ export default function App() {
   const [galleryDirection, setGalleryDirection] = useState(1);
   const [isGalleryPaused, setIsGalleryPaused] = useState(false);
   const [isAdminPasswordOpen, setIsAdminPasswordOpen] = useState(false);
+  const [adminOwnerId, setAdminOwnerId] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [isAdminPasswordVisible, setIsAdminPasswordVisible] = useState(false);
   const [adminPasswordError, setAdminPasswordError] = useState('');
   const [isValidatingAdmin, setIsValidatingAdmin] = useState(false);
   const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false);
   const [dashboardRows, setDashboardRows] = useState([]);
+  const [dashboardWeddingName, setDashboardWeddingName] = useState(identity.coupleNames);
   const [loadedImageCount, setLoadedImageCount] = useState(0);
   const [loadedImageSources, setLoadedImageSources] = useState(() => new Set());
   const [isLogoExpanded, setIsLogoExpanded] = useState(false);
@@ -109,6 +113,7 @@ export default function App() {
   const openingStartedRef = useRef(false);
   const logoPreviewTimerRef = useRef(null);
   const shouldReduceMotion = useReducedMotion();
+  const deploymentWeddingSlug = weddingSlug || identity.slug;
   const isMessengerInAppBrowser = useMemo(() => (
     typeof navigator !== 'undefined' && /FBAN|FBAV|Messenger/i.test(navigator.userAgent)
   ), []);
@@ -325,11 +330,12 @@ export default function App() {
 
     try {
       if (!supabase) throw new Error('Supabase is not configured.');
-      const { error } = await supabase.from('rsvp_submissions').insert({
-        full_name: formData.name.trim(),
-        attendance: formData.attendance,
-        guest_count: Number(formData.guests),
-        message: formData.message.trim() || null,
+      const { error } = await supabase.rpc('submit_wedding_rsvp', {
+        p_wedding_slug: deploymentWeddingSlug,
+        p_full_name: formData.name.trim(),
+        p_attendance: formData.attendance,
+        p_guest_count: Number(formData.guests),
+        p_message: formData.message.trim() || null,
       });
       if (error) throw error;
       setRsvpSubmitted(true);
@@ -355,25 +361,27 @@ export default function App() {
 
     try {
       if (!supabase) throw new Error('Supabase is not configured.');
-      const { data, error } = await supabase.rpc('get_rsvp_dashboard', {
-        p_username: 'wed-invi-admin',
+      const normalizedOwnerId = adminOwnerId.trim().toLowerCase();
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalizedOwnerId)) {
+        setAdminPasswordError('Enter a valid invitation ID using letters, numbers, and hyphens.');
+        return;
+      }
+      const { data: submissions, error } = await supabase.rpc('get_wedding_rsvp_dashboard', {
+        p_wedding_slug: deploymentWeddingSlug,
+        p_username: normalizedOwnerId,
         p_password: adminPassword,
       });
 
       if (error) {
-        const isMissingDashboardFunction = error.code === 'PGRST202' || error.message?.includes('get_rsvp_dashboard');
-        const isMissingCryptoExtension = error.message?.includes('function crypt');
-        setAdminPasswordError(
-          isMissingCryptoExtension
-            ? 'Dashboard security needs its one-time Supabase function update.'
-            : isMissingDashboardFunction
-            ? 'Dashboard setup is incomplete. Run the supplied Supabase migration once, then try again.'
-            : 'Incorrect password. Please try again.',
-        );
+        const isMissingFunction = error.code === 'PGRST202' || error.message?.includes('get_wedding_rsvp_dashboard');
+        setAdminPasswordError('Unable to sign in. Check your invitation ID and password, then try again.');
+        if (isMissingFunction) setAdminPasswordError('Dashboard setup is incomplete. Run the latest Supabase migration, then try again.');
         return;
       }
 
-      setDashboardRows(data ?? []);
+      setDashboardRows(submissions ?? []);
+      setDashboardWeddingName(identity.coupleNames);
+      setAdminOwnerId('');
       setAdminPassword('');
       setIsAdminPasswordVisible(false);
       setIsAdminPasswordOpen(false);
@@ -388,21 +396,39 @@ export default function App() {
     }
   };
 
+  const handleCloseDashboard = () => {
+    setIsAdminDashboardOpen(false);
+    setDashboardRows([]);
+  };
+
   return (
     <div className="bg-[#36121A] text-[#F3E5E8] font-serif selection:bg-[#C48C78]/30 selection:text-[#36121A] h-[100svh] w-screen overflow-hidden relative antialiased flex flex-col">
       {showCoordinatorMode && <CoordinatorMode onClose={() => setShowCoordinatorMode(false)} />}
-      {isAdminDashboardOpen && <Suspense fallback={null}><RSVPDashboard rows={dashboardRows} onClose={() => setIsAdminDashboardOpen(false)} /></Suspense>}
+      {isAdminDashboardOpen && <Suspense fallback={null}><RSVPDashboard rows={dashboardRows} weddingName={dashboardWeddingName} onClose={handleCloseDashboard} /></Suspense>}
       <AnimatePresence>
         {isAdminPasswordOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[75] flex items-center justify-center bg-[#16070B]/80 p-6 backdrop-blur-sm">
             <motion.form role="dialog" aria-modal="true" aria-labelledby="admin-access-title" initial={{ opacity: 0, scale: 0.96, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 12 }} onSubmit={handleAdminPasswordSubmit} className="w-full max-w-sm rounded-3xl border border-[#C8A96A]/45 bg-[#451822] p-7 shadow-2xl">
               <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-[#C8A96A]">Recognizing invitation...</p>
-              <h2 id="admin-access-title" className="mt-3 font-serif text-3xl font-light text-[#F3E5E8]">Admin access</h2>
-              <label htmlFor="admin-password" className="mt-6 block font-sans text-[10px] uppercase tracking-[0.2em] text-[#D4B8BC]">Password</label>
+              <h2 id="admin-access-title" className="mt-3 font-serif text-3xl font-light text-[#F3E5E8]">Private dashboard</h2>
+              <label htmlFor="admin-owner-id" className="mt-6 block font-sans text-[10px] uppercase tracking-[0.2em] text-[#D4B8BC]">Invitation ID</label>
+              <input
+                id="admin-owner-id"
+                autoFocus
+                required
+                autoComplete="username"
+                type="text"
+                inputMode="text"
+                spellCheck="false"
+                placeholder="p-and-r"
+                value={adminOwnerId}
+                onChange={(event) => setAdminOwnerId(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-[#C8A96A]/35 bg-[#2A0D14] px-4 py-3 font-serif text-lg text-[#F3E5E8] outline-none focus:border-[#C8A96A]"
+              />
+              <label htmlFor="admin-password" className="mt-4 block font-sans text-[10px] uppercase tracking-[0.2em] text-[#D4B8BC]">Password</label>
               <div className="relative mt-2">
                 <input
                   id="admin-password"
-                  autoFocus
                   required
                   autoComplete="current-password"
                   type={isAdminPasswordVisible ? 'text' : 'password'}
@@ -421,7 +447,7 @@ export default function App() {
                 </button>
               </div>
               {adminPasswordError && <p className="mt-3 text-sm text-[#F3B5AD]">{adminPasswordError}</p>}
-              <div className="mt-6 flex gap-3"><button type="button" onClick={() => { setIsAdminPasswordVisible(false); setIsAdminPasswordOpen(false); }} className="flex-1 rounded-full border border-[#C8A96A]/35 px-4 py-3 font-sans text-[10px] uppercase tracking-[0.2em] text-[#F3E5E8]">Cancel</button><button type="submit" disabled={isValidatingAdmin} className="flex-1 rounded-full bg-[#C8A96A] px-4 py-3 font-sans text-[10px] uppercase tracking-[0.2em] text-[#2A0D14] disabled:opacity-60">{isValidatingAdmin ? 'Checking...' : 'Continue'}</button></div>
+              <div className="mt-6 flex gap-3"><button type="button" onClick={() => { setAdminOwnerId(''); setAdminPassword(''); setIsAdminPasswordVisible(false); setIsAdminPasswordOpen(false); }} className="flex-1 rounded-full border border-[#C8A96A]/35 px-4 py-3 font-sans text-[10px] uppercase tracking-[0.2em] text-[#F3E5E8]">Cancel</button><button type="submit" disabled={isValidatingAdmin} className="flex-1 rounded-full bg-[#C8A96A] px-4 py-3 font-sans text-[10px] uppercase tracking-[0.2em] text-[#2A0D14] disabled:opacity-60">{isValidatingAdmin ? 'Signing in...' : 'Continue'}</button></div>
             </motion.form>
           </motion.div>
         )}
@@ -470,7 +496,8 @@ export default function App() {
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-50 bg-[#36121A] flex flex-col items-center justify-center text-center px-6 overflow-hidden"
           >
-            <img src={landingBackground} alt="" aria-hidden="true" fetchPriority="high" className="pointer-events-none absolute inset-0 h-full w-full scale-[1.03] object-cover object-center opacity-70 brightness-[1] saturate-[0.78]" />
+            <img src={landingMobileBackground} alt="" aria-hidden="true" fetchPriority="high" className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-78 brightness-[0.96] saturate-[0.82] md:hidden" />
+            <img src={landingBackground} alt="" aria-hidden="true" fetchPriority="high" className="pointer-events-none absolute inset-0 hidden h-full w-full scale-[1.03] object-cover object-center opacity-70 brightness-[1] saturate-[0.78] md:block" />
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(42,13,20,0.72),rgba(54,18,26,0.48)_48%,rgba(42,13,20,0.82))]" />
             <div className="absolute inset-0 pointer-events-none">
               {[...Array(25)].map((_, i) => (
@@ -517,8 +544,8 @@ export default function App() {
                 <img src={logoWebp} width="2000" height="2000" alt={identity.monogramAlt} fetchPriority="high" className="h-full w-full object-contain filter drop-shadow-[0_0_20px_rgba(196,140,120,0.6)]" />
               </motion.button>
 
-              <p className="font-sans text-[10px] tracking-[0.4em] text-[#C48C78] uppercase mb-1">You Are Cordially Invited</p>
-              <h1 className="font-serif text-3xl md:text-4xl text-[#F3E5E8] font-light mb-8">{identity.coupleNames}</h1>
+              <p className="mb-8 font-sans text-[10px] uppercase tracking-[0.4em] text-[#C48C78] md:mb-1">You Are Cordially Invited</p>
+              <h1 className="sr-only mb-8 font-serif text-3xl font-light text-[#F3E5E8] md:not-sr-only md:text-4xl">{identity.coupleNames}</h1>
 
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -744,11 +771,25 @@ export default function App() {
         {/* SECTION 0: HERO (CHAPTER 1) WITH MAGICAL CURTAIN-REVEAL ANIMATIONS */}
         <section className="h-[100svh] w-full snap-start snap-always flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
           <img
+            src={chapterOneMobileBackground}
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-28 blur-xl brightness-[0.8] saturate-[0.7] md:hidden"
+          />
+          <img
+            src={chapterOneMobileBackground}
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            className="pointer-events-none absolute inset-0 h-full w-full object-contain object-center opacity-56 brightness-[1.05] saturate-[0.76] md:hidden"
+          />
+          <img
             src={chapterOneBackground}
             alt=""
             aria-hidden="true"
             fetchPriority="high"
-            className="pointer-events-none absolute inset-0 h-full w-full scale-[1.03] object-cover object-[58%_center] opacity-45 brightness-[1.5] saturate-[0.72] md:object-center"
+            className="pointer-events-none absolute inset-0 hidden h-full w-full scale-[1.03] object-cover object-center opacity-45 brightness-[1.5] saturate-[0.72] md:block"
           />
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(36,48,38,0.82)_0%,rgba(89,74,62,0.44)_46%,rgba(54,38,42,0.86)_100%)]" />
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(217,198,165,0.18),transparent_48%)]" />
@@ -939,7 +980,7 @@ export default function App() {
               className="mx-auto w-full max-w-4xl"
               role="region"
               aria-roledescription="carousel"
-              aria-label="Stefano and Mhyka's wedding album"
+              aria-label="Paola and Ryan's wedding album"
               tabIndex={0}
               onKeyDown={(event) => {
                 if (event.key === 'ArrowLeft') moveGallery(-1);

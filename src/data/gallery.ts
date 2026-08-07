@@ -20,12 +20,6 @@ import gallery10Small from '../assets/gallery/gallery-10-720.webp';
 import gallery10Large from '../assets/gallery/gallery-10-1200.webp';
 import gallery11Small from '../assets/gallery/gallery-11-720.webp';
 import gallery11Large from '../assets/gallery/gallery-11-1200.webp';
-import gallery12Small from '../assets/gallery/gallery-12-720.webp';
-import gallery12Large from '../assets/gallery/gallery-12-1200.webp';
-import gallery13Small from '../assets/gallery/gallery-13-720.webp';
-import gallery13Large from '../assets/gallery/gallery-13-1200.webp';
-import gallery14Small from '../assets/gallery/gallery-14-720.webp';
-import gallery14Large from '../assets/gallery/gallery-14-1200.webp';
 
 const photo = (id: string, small: string, large: string, caption: string, alt: string) => ({
   id,
@@ -36,19 +30,16 @@ const photo = (id: string, small: string, large: string, caption: string, alt: s
   alt,
 });
 
-export const stefanoMhykaGallery = [
-  photo('garden-promise', gallery01Small, gallery01Large, 'Where Our Story Blooms', 'Stefano and Mhyka smiling at one another in a garden'),
-  photo('walking-together', gallery02Small, gallery02Large, 'Side by Side', 'Stefano and Mhyka walking hand in hand'),
-  photo('shared-laughter', gallery03Small, gallery03Large, 'The Joy We Share', 'Stefano and Mhyka laughing together'),
-  photo('close-to-you', gallery04Small, gallery04Large, 'Close to You', 'Stefano and Mhyka sharing a tender moment'),
-  photo('portrait-together', gallery05Small, gallery05Large, 'At Home With You', 'Mhyka embracing Stefano from behind'),
-  photo('playful-love', gallery06Small, gallery06Large, 'Our Playful Kind of Love', 'Stefano and Mhyka sharing a playful moment'),
-  photo('smiles-up-close', gallery07Small, gallery07Large, 'A Thousand Reasons to Smile', 'A close portrait of Stefano and Mhyka smiling'),
-  photo('her-happiness', gallery08Small, gallery08Large, 'You Make Me Smile', 'Mhyka smiling beside Stefano'),
-  photo('golden-gaze', gallery09Small, gallery09Large, 'In Every Light', 'Stefano and Mhyka looking at one another in golden light'),
-  photo('sunlit-embrace', gallery10Small, gallery10Large, 'Held in Golden Light', 'Stefano and Mhyka embracing by the sea'),
-  photo('seaside-dance', gallery11Small, gallery11Large, 'Dancing Into Forever', 'Stefano and Mhyka holding hands beside the sea'),
-  photo('running-at-sunset', gallery12Small, gallery12Large, 'Chasing Sunsets Together', 'Stefano and Mhyka running hand in hand at sunset'),
-  photo('sunset-embrace', gallery13Small, gallery13Large, 'Always in Your Arms', 'Stefano embracing Mhyka beneath a sunset sky'),
-  photo('forever-silhouette', gallery14Small, gallery14Large, 'And So Forever Begins', 'Stefano and Mhyka silhouetted against the setting sun'),
+export const paolaRyanGallery = [
+  photo('our-horizon', gallery01Small, gallery01Large, 'Where Forever Begins', 'Paola and Ryan together on a sunlit hill beneath an open sky'),
+  photo('reaching-for-you', gallery02Small, gallery02Large, 'Always Reaching for You', 'Paola and Ryan reaching for one another on a grassy hill'),
+  photo('promise-in-bloom', gallery03Small, gallery03Large, 'A Promise in Bloom', 'Paola and Ryan smiling together with a white bouquet'),
+  photo('dance-in-the-light', gallery04Small, gallery04Large, 'Dancing in the Light', 'Paola and Ryan dancing against a mountain view'),
+  photo('quiet-happiness', gallery05Small, gallery05Large, 'The Joy You Bring', 'Paola smiling with flowers while Ryan looks on'),
+  photo('chasing-sunsets', gallery06Small, gallery06Large, 'Chasing Sunsets Together', 'Paola and Ryan running hand in hand along the shore at sunset'),
+  photo('evening-promise', gallery07Small, gallery07Large, 'Into Every Sunset', 'Paola and Ryan holding hands before a vivid sunset'),
+  photo('sparkler-light', gallery08Small, gallery08Large, 'You Are My Light', 'Paola and Ryan smiling together with sparklers by the sea'),
+  photo('close-to-you', gallery09Small, gallery09Large, 'Close to You', 'Paola resting her head on Ryan while watching the sunset'),
+  photo('by-the-water', gallery10Small, gallery10Large, 'In Every Light', 'Ryan looking at Paola beside the water at twilight'),
+  photo('side-by-side', gallery11Small, gallery11Large, 'Side by Side', 'Paola and Ryan walking hand in hand through a sunlit field'),
 ];
